@@ -10,22 +10,22 @@ import {
 
 const quickLinks = [
   {
-    title: "Reimbursements",
-    description: "Submit and track expense reimbursements",
+    title: "New Expense",
+    description: "Submit a new expense or reimbursement",
     icon: Receipt,
-    href: "/reimbursements",
+    href: "/expenses/new",
     color: "text-green-600 bg-green-50 dark:bg-green-950/20",
   },
   {
-    title: "Advances",
+    title: "Request Advance",
     description: "Request and manage cash advances",
     icon: CreditCard,
-    href: "/advances",
+    href: "/expenses/new",
     color: "text-blue-600 bg-blue-50 dark:bg-blue-950/20",
   },
   {
-    title: "Approve",
-    description: "Review and approve requests",
+    title: "Approvals",
+    description: "Review and approve pending requests",
     icon: CheckCircle,
     href: "/approvals",
     color: "text-orange-600 bg-orange-50 dark:bg-orange-950/20",

@@ -117,16 +117,18 @@ export class AuthService {
       }
 
       const data = await response.json();
-      const appPermissions = data.permissions?.app || {};
+      // Ensure permissions object exists and has expected structure
+      const permissions = data.permissions || {};
+      const appPermissions = permissions.app || {};
       const role = appPermissions.roles?.[0] || null;
-      const permissions = appPermissions.permissions || [];
+      const permissionsList = appPermissions.permissions || [];
       const modules = appPermissions.modules || [];
       const features = appPermissions.features || [];
-      const apps = Object.keys(data.permissions || {});
+      const apps = Object.keys(permissions || {});
       const name = data.name || "";
 
       const user = JSON.parse(storage.getItem("user") || "{}");
-      user.permissions = permissions;
+      user.permissions = permissionsList;
       user.modules = modules;
       user.features = features;
       user.apps = apps;
@@ -138,7 +140,7 @@ export class AuthService {
         sub: data.sub,
         email: data.email,
         userType: data.userType,
-        permissions,
+        permissions: permissionsList,
         apps,
         role,
         modules,

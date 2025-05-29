@@ -8,6 +8,8 @@ import { PendingTasksSection } from "@/components/PendingTasksSection";
 import { QuickLinksSection } from "@/components/QuickLinksSection";
 import { WelcomeSection } from "@/components/Welcome";
 import { useAuth } from "@/Context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const DashboardContent = () => (
   <div className="space-y-8">
@@ -21,6 +23,13 @@ const DashboardContent = () => (
 );
 
 const Home = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to dashboard if authenticated
+    router.push("/dashboard");
+  }, [router]);
+
   return (
     <AuthProvider>
       <HomeContent />
@@ -34,7 +43,9 @@ const HomeContent = () => {
   if (!isAuthenticated) {
     return (
       <div className="h-[100vh]">
-        <LoginPage />
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
       </div>
     );
   }
