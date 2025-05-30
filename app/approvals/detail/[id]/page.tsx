@@ -401,7 +401,7 @@ type BudgetRequestData = {
 export default function ApprovalDetailPage({
   params,
 }: {
-  params: { id: string } | Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const router = useRouter();
   const resolvedParams = use(params);
