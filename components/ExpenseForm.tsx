@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExpenseType, ExpenseCategory, ExpenseItem } from "@/Models/expense";
+import { Vendor, mockVendors } from "@/Models/vendor";
 import {
   currencies,
   getUserRegionCurrency,
   calculateFinalAmount,
   formatCurrency,
 } from "@/lib/currency";
-import { X, Plus, FileText, Image, Trash2, Edit } from "lucide-react";
+import { X, Plus, FileText, Image, Trash2, Edit, UserPlus } from "lucide-react";
 
 interface ExpenseFormProps {
   onSubmit: (data: any) => void;
@@ -61,6 +62,16 @@ export function ExpenseForm({
   const [nationalIdPin, setNationalIdPin] = useState(
     initialData?.nationalIdPin || "",
   );
+
+  // Vendor selection
+  const [selectedVendor, setSelectedVendor] = useState<string>("");
+  const [vendors, setVendors] = useState<Vendor[]>(mockVendors);
+  const [showAddVendorForm, setShowAddVendorForm] = useState(false);
+  const [newVendor, setNewVendor] = useState<{
+    name: string;
+    payeeNumber: string;
+    nationalIdPin: string;
+  }>({ name: "", payeeNumber: "254", nationalIdPin: "" });
 
   // Multiple expense items
   const [items, setItems] = useState<ExpenseItemForm[]>([]);
@@ -216,7 +227,46 @@ export function ExpenseForm({
       isEditing: isEditing,
       isAccountability: isAccountability,
       originalExpenseId: originalExpenseId,
+      vendorId: selectedVendor || undefined,
     });
+  };
+
+  const handleVendorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const vendorId = e.target.value;
+    setSelectedVendor(vendorId);
+
+    if (vendorId) {
+      const vendor = vendors.find((v) => v.id === vendorId);
+      if (vendor) {
+        setPayeeName(vendor.name);
+        setPayeeNumber(vendor.payeeNumber);
+        setNationalIdPin(vendor.nationalIdPin);
+      }
+    }
+  };
+
+  const handleAddVendor = () => {
+    if (!newVendor.name || !newVendor.payeeNumber || !newVendor.nationalIdPin) {
+      return;
+    }
+
+    const newVendorEntry: Vendor = {
+      id: `v${vendors.length + 1}`,
+      name: newVendor.name,
+      payeeNumber: newVendor.payeeNumber,
+      nationalIdPin: newVendor.nationalIdPin,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setVendors([...vendors, newVendorEntry]);
+    setSelectedVendor(newVendorEntry.id);
+    setPayeeName(newVendorEntry.name);
+    setPayeeNumber(newVendorEntry.payeeNumber);
+    setNationalIdPin(newVendorEntry.nationalIdPin);
+    setShowAddVendorForm(false);
+    setNewVendor({ name: "", payeeNumber: "254", nationalIdPin: "" });
   };
 
   const handleFileChange = (
@@ -384,6 +434,100 @@ export function ExpenseForm({
           <div className="space-y-4 border border-gray-200 rounded-md p-4">
             <h3 className="font-medium">Payment Details</h3>
 
+            {expenseType === ExpenseType.PAYOUT && (
+              <div className="space-y-2">
+                <Label htmlFor="vendor">Select Vendor</Label>
+                <div className="flex gap-2">
+                  <select
+                    id="vendor"
+                    className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={selectedVendor}
+                    onChange={handleVendorChange}
+                  >
+                    <option value="">-- Select a vendor --</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddVendorForm(!showAddVendorForm)}
+                    className="whitespace-nowrap"
+                  >
+                    <UserPlus className="w-4 h-4 mr-1" />
+                    {showAddVendorForm ? "Cancel" : "New Vendor"}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Select an existing vendor or add a new one.
+                </p>
+              </div>
+            )}
+
+            {showAddVendorForm && expenseType === ExpenseType.PAYOUT && (
+              <div className="p-4 border border-dashed border-gray-300 rounded-md bg-gray-50 space-y-3">
+                <h4 className="font-medium text-sm">Add New Vendor</h4>
+
+                <div className="space-y-2">
+                  <Label htmlFor="newVendorName">Vendor Name</Label>
+                  <Input
+                    id="newVendorName"
+                    placeholder="Enter vendor name"
+                    value={newVendor.name}
+                    onChange={(e) =>
+                      setNewVendor({ ...newVendor, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="newVendorPayeeNumber">Vendor Number</Label>
+                  <Input
+                    id="newVendorPayeeNumber"
+                    placeholder="254"
+                    value={newVendor.payeeNumber}
+                    onChange={(e) =>
+                      setNewVendor({
+                        ...newVendor,
+                        payeeNumber: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="newVendorNationalIdPin">Vendor ID/PIN</Label>
+                  <Input
+                    id="newVendorNationalIdPin"
+                    placeholder="Enter National ID or PIN number"
+                    value={newVendor.nationalIdPin}
+                    onChange={(e) =>
+                      setNewVendor({
+                        ...newVendor,
+                        nationalIdPin: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddVendor}
+                  className="w-full"
+                >
+                  Add Vendor
+                </Button>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="payeeName">Payee Name</Label>
               <Input
@@ -392,6 +536,14 @@ export function ExpenseForm({
                 value={payeeName}
                 onChange={(e) => setPayeeName(e.target.value)}
                 required
+                className={
+                  selectedVendor && expenseType === ExpenseType.PAYOUT
+                    ? "bg-gray-50"
+                    : ""
+                }
+                readOnly={
+                  selectedVendor !== "" && expenseType === ExpenseType.PAYOUT
+                }
               />
               <p className="text-xs text-gray-500">
                 Enter the full name of the payee.
@@ -406,6 +558,14 @@ export function ExpenseForm({
                 value={payeeNumber}
                 onChange={(e) => setPayeeNumber(e.target.value)}
                 required
+                className={
+                  selectedVendor && expenseType === ExpenseType.PAYOUT
+                    ? "bg-gray-50"
+                    : ""
+                }
+                readOnly={
+                  selectedVendor !== "" && expenseType === ExpenseType.PAYOUT
+                }
               />
               <p className="text-xs text-gray-500">
                 Enter the payee's contact or reference number.
@@ -420,6 +580,14 @@ export function ExpenseForm({
                 value={nationalIdPin}
                 onChange={(e) => setNationalIdPin(e.target.value)}
                 required
+                className={
+                  selectedVendor && expenseType === ExpenseType.PAYOUT
+                    ? "bg-gray-50"
+                    : ""
+                }
+                readOnly={
+                  selectedVendor !== "" && expenseType === ExpenseType.PAYOUT
+                }
               />
               <p className="text-xs text-gray-500">
                 Enter the national ID for individuals or PIN for companies. Use
