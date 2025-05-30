@@ -388,6 +388,15 @@ const getBudgetStatusColor = (
   }
 };
 
+type BudgetRequestData = {
+  itemId: string;
+  category: ExpenseCategory;
+  currentBudget: number;
+  requestedAmount: number;
+  reason: string;
+  requestedTo: string;
+};
+
 export default function ApprovalDetailPage({
   params,
 }: {
@@ -406,6 +415,11 @@ export default function ApprovalDetailPage({
   const [forwardComment, setForwardComment] = useState("");
   const [showForwardModal, setShowForwardModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showBudgetRequestModal, setShowBudgetRequestModal] = useState(false);
+  const [budgetRequestData, setBudgetRequestData] =
+    useState<BudgetRequestData | null>(null);
+  const [budgetRequestReason, setBudgetRequestReason] = useState("");
+  const [budgetRequestTo, setBudgetRequestTo] = useState("");
   const [currentDocument, setCurrentDocument] = useState<{
     name: string;
     url: string;
@@ -567,6 +581,52 @@ export default function ApprovalDetailPage({
 
   const getBudgetInfo = (category: ExpenseCategory) => {
     return mockBudgetData[category];
+  };
+
+  const handleRequestBudget = (itemId: string) => {
+    const item = approval.items.find((i) => i.id === itemId);
+    if (!item) return;
+
+    const budgetInfo = getBudgetInfo(item.category);
+    const requestData: BudgetRequestData = {
+      itemId: item.id,
+      category: item.category,
+      currentBudget: budgetInfo.allocated,
+      requestedAmount: item.finalAmount || item.amount,
+      reason: "",
+      requestedTo: "",
+    };
+
+    setBudgetRequestData(requestData);
+    setShowBudgetRequestModal(true);
+  };
+
+  const handleSubmitBudgetRequest = () => {
+    if (!budgetRequestData || !budgetRequestReason || !budgetRequestTo) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    // In a real app, this would send the request to the backend
+    alert(`Budget increase request sent to ${budgetRequestTo}`);
+
+    // Add to history
+    const newHistoryItem = {
+      action: "Budget Increase Requested",
+      user: "Current User", // In a real app, this would be the current user
+      timestamp: new Date().toISOString(),
+      comment: budgetRequestReason,
+    };
+
+    setApproval({
+      ...approval,
+      history: [...(approval.history || []), newHistoryItem],
+    });
+
+    setShowBudgetRequestModal(false);
+    setBudgetRequestData(null);
+    setBudgetRequestReason("");
+    setBudgetRequestTo("");
   };
 
   return (
@@ -764,6 +824,7 @@ export default function ApprovalDetailPage({
                               >
                                 {formatCurrency(
                                   budgetInfo.remaining - item.amount,
+                                  budgetInfo.currency,
                                 )}{" "}
                                 remaining after
                               </Badge>
@@ -779,21 +840,39 @@ export default function ApprovalDetailPage({
                             <div className="flex justify-between text-sm">
                               <div>
                                 <span className="font-medium">
-                                  {formatCurrency(budgetInfo.spent)}
+                                  {formatCurrency(
+                                    budgetInfo.spent,
+                                    budgetInfo.currency,
+                                  )}
                                 </span>
                                 <span className="text-muted-foreground">
                                   {" "}
                                   spent of{" "}
                                 </span>
                                 <span className="font-medium">
-                                  {formatCurrency(budgetInfo.allocated)}
+                                  {formatCurrency(
+                                    budgetInfo.allocated,
+                                    budgetInfo.currency,
+                                  )}
                                 </span>
                               </div>
                               <div className="text-muted-foreground">
                                 {percentSpent}% used
-                                <span className="text-blue-600 ml-2">
+                                <span
+                                  className={`ml-2 ${percentWouldBeSpent > 100 ? "text-red-600" : "text-blue-600"}`}
+                                >
                                   → {percentWouldBeSpent}% after approval
                                 </span>
+                                {percentWouldBeSpent > 100 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 border-red-200 hover:bg-red-50 ml-2 h-6 text-xs"
+                                    onClick={() => handleRequestBudget(item.id)}
+                                  >
+                                    Request More
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -918,55 +997,90 @@ export default function ApprovalDetailPage({
                             <div className="text-sm text-muted-foreground mb-1">
                               Budget Status
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                {(() => {
+                                  const budgetInfo = getBudgetInfo(
+                                    selectedItem.category,
+                                  );
+                                  const itemAmount =
+                                    selectedItem.finalAmount ||
+                                    selectedItem.amount;
+                                  const remaining =
+                                    budgetInfo.remaining - itemAmount;
+                                  let statusColor, statusText, icon;
+
+                                  if (remaining < 0) {
+                                    statusColor = "text-red-600";
+                                    statusText = "Over budget";
+                                    icon = (
+                                      <AlertCircle className="h-4 w-4 text-red-600" />
+                                    );
+                                  } else if (
+                                    remaining <
+                                    budgetInfo.allocated * 0.1
+                                  ) {
+                                    statusColor = "text-amber-600";
+                                    statusText = "Near limit";
+                                    icon = (
+                                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                                    );
+                                  } else {
+                                    statusColor = "text-green-600";
+                                    statusText = "Within budget";
+                                    icon = (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    );
+                                  }
+
+                                  return (
+                                    <>
+                                      {icon}
+                                      <span
+                                        className={`font-medium ${statusColor}`}
+                                      >
+                                        {statusText}
+                                      </span>
+                                      <span className="text-muted-foreground">
+                                        •
+                                      </span>
+                                      <span>
+                                        {formatCurrency(
+                                          remaining,
+                                          budgetInfo.currency,
+                                        )}{" "}
+                                        remaining after approval
+                                      </span>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                               {(() => {
                                 const budgetInfo = getBudgetInfo(
                                   selectedItem.category,
                                 );
+                                const itemAmount =
+                                  selectedItem.finalAmount ||
+                                  selectedItem.amount;
                                 const remaining =
-                                  budgetInfo.remaining - selectedItem.amount;
-                                let statusColor, statusText, icon;
+                                  budgetInfo.remaining - itemAmount;
 
                                 if (remaining < 0) {
-                                  statusColor = "text-red-600";
-                                  statusText = "Over budget";
-                                  icon = (
-                                    <AlertCircle className="h-4 w-4 text-red-600" />
-                                  );
-                                } else if (
-                                  remaining <
-                                  budgetInfo.allocated * 0.1
-                                ) {
-                                  statusColor = "text-amber-600";
-                                  statusText = "Near limit";
-                                  icon = (
-                                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                                  );
-                                } else {
-                                  statusColor = "text-green-600";
-                                  statusText = "Within budget";
-                                  icon = (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                  return (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 border-red-200 hover:bg-red-50 mt-2"
+                                      onClick={() =>
+                                        handleRequestBudget(selectedItem.id)
+                                      }
+                                    >
+                                      <AlertCircle className="mr-2 h-4 w-4" />
+                                      Request Budget Increase
+                                    </Button>
                                   );
                                 }
-
-                                return (
-                                  <>
-                                    {icon}
-                                    <span
-                                      className={`font-medium ${statusColor}`}
-                                    >
-                                      {statusText}
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                      •
-                                    </span>
-                                    <span>
-                                      {formatCurrency(remaining)} remaining
-                                      after approval
-                                    </span>
-                                  </>
-                                );
+                                return null;
                               })()}
                             </div>
                           </div>
@@ -1316,6 +1430,104 @@ export default function ApprovalDetailPage({
                   Document preview would be displayed here in a real
                   application.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Budget Request Modal */}
+      {showBudgetRequestModal && budgetRequestData && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowBudgetRequestModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold">Request Budget Increase</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setShowBudgetRequestModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Category</p>
+                <p className="font-medium">
+                  {budgetRequestData.category.replace("_", " ")}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Current Budget
+                  </p>
+                  <p className="font-medium">
+                    {formatCurrency(budgetRequestData.currentBudget)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Requested Amount
+                  </p>
+                  <p className="font-medium">
+                    {formatCurrency(budgetRequestData.requestedAmount)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="budget-request-to">Request To</Label>
+                <select
+                  id="budget-request-to"
+                  className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  value={budgetRequestTo}
+                  onChange={(e) => setBudgetRequestTo(e.target.value)}
+                  required
+                >
+                  <option value="">Select recipient</option>
+                  <option value="finance@sunculture.io">
+                    Finance Department
+                  </option>
+                  <option value="gm@sunculture.io">General Manager</option>
+                  <option value="cfo@sunculture.io">
+                    Chief Financial Officer
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="budget-request-reason">
+                  Reason for Request
+                </Label>
+                <textarea
+                  id="budget-request-reason"
+                  placeholder="Explain why additional budget is needed..."
+                  value={budgetRequestReason}
+                  onChange={(e) => setBudgetRequestReason(e.target.value)}
+                  className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBudgetRequestModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitBudgetRequest}>
+                  Submit Request
+                </Button>
               </div>
             </div>
           </div>
