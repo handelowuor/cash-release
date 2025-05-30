@@ -18,6 +18,15 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Mock departments data
+const departments = [
+  { id: "engineering", name: "Engineering" },
+  { id: "finance", name: "Finance" },
+  { id: "marketing", name: "Marketing" },
+  { id: "sales", name: "Sales" },
+  { id: "hr", name: "HR" },
+];
+
 export default function NewUserPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
