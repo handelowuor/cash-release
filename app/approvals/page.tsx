@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { ExpenseStatus, ExpenseType } from "@/Models/expense";
 
 type ApprovalItem = {
@@ -127,6 +128,8 @@ const formatDate = (dateString: string) => {
 export default function ApprovalsPage() {
   const [approvals, setApprovals] = useState<ApprovalItem[]>(mockApprovals);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const handleApprove = (id: string) => {
     setApprovals(
@@ -152,6 +155,16 @@ export default function ApprovalsPage() {
     selectedFilter === "all"
       ? approvals
       : approvals.filter((item) => item.type === selectedFilter);
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilter]);
+
+  const paginatedApprovals = filteredApprovals.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   return (
     <div>
@@ -227,7 +240,7 @@ export default function ApprovalsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredApprovals.map((item) => (
+                {paginatedApprovals.map((item) => (
                   <tr
                     key={item.id}
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -277,17 +290,28 @@ export default function ApprovalsPage() {
                     </td>
                   </tr>
                 ))}
+                {paginatedApprovals.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-6 text-center text-muted-foreground"
+                    >
+                      No pending approvals found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
-
-            {filteredApprovals.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">
-                  No pending approvals found
-                </p>
-              </div>
-            )}
           </div>
+
+          <Pagination
+            totalItems={filteredApprovals.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            className="mt-4"
+          />
         </CardContent>
       </Card>
     </div>

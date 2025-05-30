@@ -27,9 +27,11 @@ const Home = () => {
 
   useEffect(() => {
     // Only redirect if we've confirmed authentication status
-    if (!isLoading && authAttempted && isAuthenticated) {
-      console.log("Home: User is authenticated, redirecting to dashboard");
-      router.push("/dashboard");
+    if (!isLoading && authAttempted) {
+      if (isAuthenticated) {
+        console.log("Home: User is authenticated, redirecting to dashboard");
+        router.push("/dashboard");
+      }
     }
   }, [router, isAuthenticated, isLoading, authAttempted]);
 
@@ -42,12 +44,7 @@ const Home = () => {
     });
   }, [isAuthenticated, isLoading, authAttempted]);
 
-  return <HomeContent />;
-};
-
-const HomeContent = () => {
-  const { isAuthenticated } = useAuth();
-
+  // Show login page directly without layout
   if (!isAuthenticated) {
     return (
       <div className="h-[100vh]">
@@ -56,6 +53,7 @@ const HomeContent = () => {
     );
   }
 
+  // This will only be shown briefly before redirect
   return <DashboardContent />;
 };
 

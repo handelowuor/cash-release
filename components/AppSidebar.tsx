@@ -230,16 +230,16 @@ const data = {
     },
     {
       title: "Users",
-      url: "#",
+      url: "/users",
       icon: Users,
       items: [
         {
-          title: "Sunculture Users",
-          url: "#",
+          title: "All Users",
+          url: "/users",
         },
         {
-          title: "Expense Approval",
-          url: "#",
+          title: "Add New User",
+          url: "/users/new",
         },
         {
           title: "Assigned Department",
@@ -299,6 +299,9 @@ const NavMain = ({
       "Submit Expense": "/expenses/new",
       Approvals: "/approvals",
       "Expense Approval": "/approvals",
+      Users: "/users",
+      "All Users": "/users",
+      "Add New User": "/users/new",
     };
 
     const targetPath =
@@ -344,7 +347,7 @@ const NavMain = ({
                             updateBreadcrumbs(item.title, subItem.title)
                           }
                         >
-                          <a href="#">
+                          <a href={subItem.url}>
                             <span className="text-gray-500 text-xs">
                               {subItem.title}
                             </span>

@@ -1,41 +1,30 @@
 export enum UserRole {
-  EMPLOYEE = "EMPLOYEE",
+  EMPLOYEE = "Employee",
   HOD = "HOD",
-  FINANCE = "FINANCE",
-  GENERAL_MANAGER = "GENERAL_MANAGER",
-  ADMIN = "ADMIN",
+  FINANCE = "Finance",
+  GENERAL_MANAGER = "General Manager",
+  ADMIN = "Admin",
 }
 
 export enum UserStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  SUSPENDED = "SUSPENDED",
+  ACTIVE = "Active",
+  INACTIVE = "Inactive",
+  SUSPENDED = "Suspended",
 }
 
 export interface User {
   id: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  displayName: string;
   email: string;
-  name: string;
-  employeeId: string;
-  department: string;
+  employeeId?: string;
+  mobile?: string;
   role: UserRole;
+  department?: string;
   status: UserStatus;
-  phoneNumber?: string;
-  position?: string;
-  manager?: string;
-  delegatedApprover?: string;
-  delegationStartDate?: Date;
-  delegationEndDate?: Date;
-  lastLogin?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserPreferences {
-  userId: string;
-  emailNotifications: boolean;
-  slackNotifications: boolean;
-  theme: "light" | "dark" | "system";
-  language: string;
-  updatedAt: Date;
+  dateOfJoining?: string;
+  dateOfBirth?: string;
+  designation?: string;
 }
