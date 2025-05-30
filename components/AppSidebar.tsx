@@ -91,16 +91,6 @@ const data = {
       title: "My Expenses",
       url: "/expenses",
       icon: DollarSign,
-      items: [
-        {
-          title: "Reimbursements",
-          url: "/expenses/reimbursements",
-        },
-        {
-          title: "My Advances",
-          url: "/expenses/advances",
-        },
-      ],
     },
     {
       title: "Approvals",

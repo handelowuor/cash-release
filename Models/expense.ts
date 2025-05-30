@@ -47,6 +47,9 @@ export interface ExpenseItem {
   date: Date;
   attachments: Attachment[];
   notes?: string;
+  status?: ExpenseStatus; // Added status to track approval at item level
+  currency?: string; // Added currency for per-item currency tracking
+  exchangeRate?: number; // Added exchange rate for per-item currency conversion
 }
 
 export interface Expense {

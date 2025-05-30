@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { ExpenseStatus, ExpenseType } from "@/Models/expense";
+import { useRouter } from "next/navigation";
 
 type ApprovalItem = {
   id: string;
@@ -121,27 +122,32 @@ const formatDate = (dateString: string) => {
 };
 
 export default function ApprovalsPage() {
+  const router = useRouter();
   const [approvals, setApprovals] = useState<ApprovalItem[]>(mockApprovals);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const handleApprove = (id: string) => {
+  const handleApproveItem = (expenseId: string, itemId: string) => {
+    // In a real implementation, this would update just the specific item
+    // For now, we'll just update the whole expense status as a placeholder
     setApprovals(
-      approvals.map((item) =>
-        item.id === id
-          ? { ...item, status: ExpenseStatus.APPROVED_BY_HOD }
-          : item,
+      approvals.map((expense) =>
+        expense.id === expenseId
+          ? { ...expense, status: ExpenseStatus.APPROVED_BY_HOD }
+          : expense,
       ),
     );
   };
 
-  const handleReject = (id: string) => {
+  const handleRejectItem = (expenseId: string, itemId: string) => {
+    // In a real implementation, this would update just the specific item
+    // For now, we'll just update the whole expense status as a placeholder
     setApprovals(
-      approvals.map((item) =>
-        item.id === id
-          ? { ...item, status: ExpenseStatus.REJECTED_BY_HOD }
-          : item,
+      approvals.map((expense) =>
+        expense.id === expenseId
+          ? { ...expense, status: ExpenseStatus.REJECTED_BY_HOD }
+          : expense,
       ),
     );
   };
@@ -268,18 +274,12 @@ export default function ApprovalsPage() {
                       <div className="flex space-x-2">
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(item.id)}
-                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() =>
+                            router.push(`/approvals/detail/${item.id}`)
+                          }
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReject(item.id)}
-                          className="text-red-600 border-red-600 hover:bg-red-50"
-                        >
-                          Reject
+                          Review Items
                         </Button>
                       </div>
                     </td>
