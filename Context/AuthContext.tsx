@@ -29,6 +29,7 @@ interface AuthContextProps {
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   isLoading: boolean;
+  authAttempted: boolean;
   checkPermission: (module: string, action: string) => Promise<boolean>;
 }
 
@@ -55,6 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [isAuthenticated, user]);
 
+  // Prevent redirect loops by tracking authentication attempts
+  const [authAttempted, setAuthAttempted] = useState(false);
+
   const checkPermission = async (
     module: string,
     action: string,
@@ -77,6 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             token: parsedUser.token.substring(0, 10) + "...",
             permissions: parsedUser.permissions?.length || 0,
           });
+
+          // Validate token with the server
+          const validateToken = async () => {
+            try {
+              await authService.getUserInfo(parsedUser.token);
+            } catch (error) {
+              console.error("Token validation failed:", error);
+              // Only clear if it's an authentication error
+              if (error instanceof Error && error.message === "TOKEN_EXPIRED") {
+                localStorage.removeItem("user");
+                setUser(null);
+              }
+            }
+          };
+          validateToken();
         } else {
           console.log("Invalid user data in localStorage");
           localStorage.removeItem("user");
@@ -86,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         localStorage.removeItem("user");
       }
     }
+    setAuthAttempted(true);
   }, []);
 
   const login = async (
@@ -161,6 +181,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         features: features || [],
         apps: apps || [],
         token,
+        // Add expiration time to help prevent redirect loops
+        expiresAt: Date.now() + 3600 * 1000, // Default 1 hour expiration
       };
       // Store in state and localStorage
       setUser(newUser);
@@ -169,11 +191,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem("user", JSON.stringify(newUser));
 
       // Redirect to dashboard after successful login if no specific path is provided
-      if (redirectPath) {
-        window.location.href = redirectPath;
-      } else {
-        window.location.href = "/dashboard";
-      }
+      // Use a small timeout to ensure state is updated before navigation
+      setTimeout(() => {
+        if (redirectPath) {
+          window.location.href = redirectPath;
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 100);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -208,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         hasPermission,
         checkPermission,
         isLoading,
+        authAttempted,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import { TempoInit } from "./tempo-init";
 import { AuthProvider } from "@/Context/AuthContext";
+import MainLayout from "./MainLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ export default function RootLayout({
         <Script src="https://api.tempo.new/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js" />
         <AuthProvider>
           <TempoInit />
-          {children}
+          <MainLayout>{children}</MainLayout>
         </AuthProvider>
       </body>
     </html>

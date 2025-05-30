@@ -23,11 +23,24 @@ const DashboardContent = () => (
 
 const Home = () => {
   const router = useRouter();
+  const { isAuthenticated, isLoading, authAttempted } = useAuth();
 
   useEffect(() => {
-    // Redirect to dashboard if authenticated
-    router.push("/dashboard");
-  }, [router]);
+    // Only redirect if we've confirmed authentication status
+    if (!isLoading && authAttempted && isAuthenticated) {
+      console.log("Home: User is authenticated, redirecting to dashboard");
+      router.push("/dashboard");
+    }
+  }, [router, isAuthenticated, isLoading, authAttempted]);
+
+  // Add a console log to track render cycles
+  useEffect(() => {
+    console.log("Home component rendered", {
+      isAuthenticated,
+      isLoading,
+      authAttempted,
+    });
+  }, [isAuthenticated, isLoading, authAttempted]);
 
   return <HomeContent />;
 };
@@ -43,11 +56,7 @@ const HomeContent = () => {
     );
   }
 
-  return (
-    <Layout>
-      <DashboardContent />
-    </Layout>
-  );
+  return <DashboardContent />;
 };
 
 export default Home;

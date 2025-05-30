@@ -5,14 +5,26 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, authAttempted } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Only redirect if we've confirmed the user is not authenticated
+    // and authentication has been attempted (to prevent redirect loops)
+    if (!isLoading && authAttempted && !isAuthenticated) {
+      console.log("Approvals: Not authenticated, redirecting to login", {
+        user,
+        authAttempted,
+      });
       router.push("/login");
+    } else if (!isLoading && isAuthenticated) {
+      console.log("Approvals: User is authenticated", {
+        hasUser: !!user,
+        hasToken: !!user?.token,
+        tokenLength: user?.token ? user.token.length : 0,
+      });
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user, authAttempted]);
 
   if (isLoading) {
     return (
