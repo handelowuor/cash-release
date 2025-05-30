@@ -55,26 +55,87 @@ export class AuthService {
       throw new Error("Client Secret is not available");
     }
 
-    const response = await fetch(`${API_AUTHSERVER_BASE_URL}/o/token/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${btoa(`${this.clientId}:${this.clientSecret}`)}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "password",
-        username,
-        password,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error_description || "Login failed");
+    // For development/testing when auth server is not available
+    if (!API_AUTHSERVER_BASE_URL) {
+      console.warn("Auth server URL not provided, using mock response");
+      return {
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+      };
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      const response = await fetch(`${API_AUTHSERVER_BASE_URL}/o/token/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${btoa(`${this.clientId}:${this.clientSecret}`)}`,
+        },
+        body: new URLSearchParams({
+          grant_type: "password",
+          username,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error_description || "Login failed");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Login API error:", error);
+      throw error;
+    }
+  }
+
+  async refreshTokenServer(refreshToken: string): Promise<any> {
+    // This method should only be called from the server side
+    if (typeof window !== "undefined") {
+      throw new Error("This method should only be called from the server side");
+    }
+
+    if (!this.clientSecret) {
+      throw new Error("Client Secret is not available");
+    }
+
+    // For development/testing when auth server is not available
+    if (!API_AUTHSERVER_BASE_URL) {
+      console.warn("Auth server URL not provided, using mock response");
+      return {
+        access_token: "mock-access-token-refreshed",
+        refresh_token: "mock-refresh-token-new",
+        expires_in: 3600,
+      };
+    }
+
+    try {
+      const response = await fetch(`${API_AUTHSERVER_BASE_URL}/o/token/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${btoa(`${this.clientId}:${this.clientSecret}`)}`,
+        },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error_description || "Refresh token failed");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Refresh token API error:", error);
+      throw error;
+    }
   }
 
   async getUserInfo(token: string): Promise<{
@@ -88,6 +149,22 @@ export class AuthService {
     features?: string[];
     name?: string;
   }> {
+    // For development/testing when auth server is not available
+    if (!API_AUTHSERVER_BASE_URL) {
+      console.warn("Auth server URL not provided, using mock response");
+      return {
+        sub: "mock-user-id",
+        email: "user@example.com",
+        userType: "employee",
+        permissions: ["expenses.create", "expenses.view"],
+        apps: ["app"],
+        role: "employee",
+        modules: ["expenses", "dashboard"],
+        features: ["create_expense", "view_dashboard"],
+        name: "Test User",
+      };
+    }
+
     let response;
     try {
       response = await fetch(`${API_AUTHSERVER_BASE_URL}/o/userinfo/`, {
@@ -166,6 +243,7 @@ export class AuthService {
       const response = await fetch("/api/refresh-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) {
@@ -187,41 +265,6 @@ export class AuthService {
       this.logout();
       throw error;
     }
-
-    const response = await fetch(`${API_AUTHSERVER_BASE_URL}/o/token/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${btoa(`${this.clientId}:${this.clientSecret}`)}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error_description || "Refresh token failed");
-    }
-
-    const data = await response.json();
-    const token = data.access_token;
-    const newRefreshToken = data.refresh_token;
-    const expiresIn = data.expires_in;
-    const expiresAt = Date.now() + expiresIn * 1000;
-
-    storage.setItem(
-      "user",
-      JSON.stringify({
-        ...user,
-        token,
-        refreshToken: newRefreshToken,
-        expiresAt,
-      }),
-    );
-
-    return token;
   }
 
   isTokenExpired(): boolean {

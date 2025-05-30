@@ -23,8 +23,14 @@ export default async function handler(
     if (data.refresh_token) {
       res.setHeader(
         "Set-Cookie",
-        `refreshToken=${data.refresh_token}; HttpOnly; Path=/; SameSite=Strict; ${process.env.NODE_ENV === "production" ? "Secure;" : ""}`,
+        `refreshToken=${data.refresh_token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000; ${process.env.NODE_ENV === "production" ? "Secure;" : ""}`,
       );
+    }
+
+    // For development/testing when no auth server is available
+    if (!process.env.NEXT_PUBLIC_AUTHSERVER_BASE_URL && !data.access_token) {
+      console.warn("Using mock token for development");
+      return res.status(200).json("mock-access-token");
     }
 
     // Return the access token to the client

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import suncultureLogo from '@/assets/sunculture-logo.png';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from "next/image";
+import suncultureLogo from "@/assets/sunculture-logo.png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from "@/components/ui/collapsible";
 
 import {
   DropdownMenu,
@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 import {
   Sidebar,
@@ -35,7 +35,7 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 
 import {
   AudioWaveform,
@@ -55,214 +55,214 @@ import {
   HandCoins,
   Users,
   type LucideIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 const data = {
   user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/placeholder.svg?height=32&width=32',
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/placeholder.svg?height=32&width=32",
   },
   teams: [
     {
-      name: 'Acme Inc',
+      name: "Acme Inc",
       logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      plan: "Enterprise",
     },
     {
-      name: 'Acme Corp.',
+      name: "Acme Corp.",
       logo: AudioWaveform,
-      plan: 'Startup',
+      plan: "Startup",
     },
     {
-      name: 'Evil Corp.',
+      name: "Evil Corp.",
       logo: Command,
-      plan: 'Free',
+      plan: "Free",
     },
   ],
   navMain: [
     {
-      title: 'Dashboard',
-      url: '#',
+      title: "Dashboard",
+      url: "#",
       icon: LayoutDashboard,
       isActive: true,
     },
     {
-      title: 'My Expenses',
-      url: '#',
+      title: "My Expenses",
+      url: "#",
       icon: DollarSign,
       items: [
         {
-          title: 'Submit Expense',
-          url: '#',
+          title: "Submit Expense",
+          url: "#",
         },
         {
-          title: 'My Advances',
-          url: '#',
+          title: "My Advances",
+          url: "#",
         },
       ],
     },
     {
-      title: 'Approvals',
-      url: '#',
+      title: "Approvals",
+      url: "#",
       icon: BookOpen,
       items: [
         {
-          title: 'Expense Approval',
-          url: '#',
+          title: "Expense Approval",
+          url: "#",
         },
         {
-          title: 'Budget Approval',
-          url: '#',
+          title: "Budget Approval",
+          url: "#",
         },
         {
-          title: 'All Advances',
-          url: '#',
+          title: "All Advances",
+          url: "#",
         },
         {
-          title: 'All Accountabilities',
-          url: '#',
+          title: "All Accountabilities",
+          url: "#",
         },
         {
-          title: 'Staff Expenses',
-          url: '#',
+          title: "Staff Expenses",
+          url: "#",
         },
         {
-          title: 'HOD Expenses',
-          url: '#',
+          title: "HOD Expenses",
+          url: "#",
         },
         {
-          title: 'Assigned Expenses',
-          url: '#',
+          title: "Assigned Expenses",
+          url: "#",
         },
         {
-          title: 'Engineers Expenses',
-          url: '#',
+          title: "Engineers Expenses",
+          url: "#",
         },
         {
-          title: 'Staff Advances',
-          url: '#',
+          title: "Staff Advances",
+          url: "#",
         },
         {
-          title: 'HOD Advances',
-          url: '#',
+          title: "HOD Advances",
+          url: "#",
         },
         {
-          title: 'Assigned Advances',
-          url: '#',
+          title: "Assigned Advances",
+          url: "#",
         },
       ],
     },
     {
-      title: 'Finance',
-      url: '#',
+      title: "Finance",
+      url: "#",
       icon: HandCoins,
       items: [
         {
-          title: 'Budgets',
-          url: '#',
+          title: "Budgets",
+          url: "#",
         },
         {
-          title: 'Budget Requests',
-          url: '#',
+          title: "Budget Requests",
+          url: "#",
         },
         {
-          title: 'Budget Checks',
-          url: '#',
+          title: "Budget Checks",
+          url: "#",
         },
         {
-          title: 'Process Payments',
-          url: '#',
+          title: "Process Payments",
+          url: "#",
         },
         {
-          title: 'Pending Advances',
-          url: '#',
+          title: "Pending Advances",
+          url: "#",
         },
         {
-          title: 'Approved Advances',
-          url: '#',
+          title: "Approved Advances",
+          url: "#",
         },
         {
-          title: 'All Advances',
-          url: '#',
+          title: "All Advances",
+          url: "#",
         },
         {
-          title: 'All Expenses',
-          url: '#',
+          title: "All Expenses",
+          url: "#",
         },
         {
-          title: 'Netsuite Advances',
-          url: '#',
+          title: "Netsuite Advances",
+          url: "#",
         },
         {
-          title: 'Netsuite Expenses',
-          url: '#',
+          title: "Netsuite Expenses",
+          url: "#",
         },
         {
-          title: 'Customer Refunds',
-          url: '#',
+          title: "Customer Refunds",
+          url: "#",
         },
         {
-          title: 'NetSuite Voucher Responses',
-          url: '#',
+          title: "NetSuite Voucher Responses",
+          url: "#",
         },
         {
-          title: 'Edit Advance',
-          url: '#',
+          title: "Edit Advance",
+          url: "#",
         },
         {
-          title: 'Suspense Posting',
-          url: '#',
+          title: "Suspense Posting",
+          url: "#",
         },
         {
-          title: 'Bulk Suspense Posting',
-          url: '#',
+          title: "Bulk Suspense Posting",
+          url: "#",
         },
         {
-          title: 'Rounding Off',
-          url: '#',
+          title: "Rounding Off",
+          url: "#",
         },
         {
-          title: 'Mpesa Payments',
-          url: '#',
+          title: "Mpesa Payments",
+          url: "#",
         },
       ],
     },
     {
-      title: 'Users',
-      url: '#',
+      title: "Users",
+      url: "#",
       icon: Users,
       items: [
         {
-          title: 'Sunculture Users',
-          url: '#',
+          title: "Sunculture Users",
+          url: "#",
         },
         {
-          title: 'Expense Approval',
-          url: '#',
+          title: "Expense Approval",
+          url: "#",
         },
         {
-          title: 'Assigned Department',
-          url: '#',
+          title: "Assigned Department",
+          url: "#",
         },
       ],
     },
     {
-      title: 'Settings',
-      url: '#',
+      title: "Settings",
+      url: "#",
       icon: Settings2,
       items: [
         {
-          title: 'Add Department',
-          url: '#',
+          title: "Add Department",
+          url: "#",
         },
         {
-          title: 'Add Expense Category',
-          url: '#',
+          title: "Add Expense Category",
+          url: "#",
         },
         {
-          title: 'Add Exempt Expense',
-          url: '#',
+          title: "Add Exempt Expense",
+          url: "#",
         },
       ],
     },
@@ -283,6 +283,16 @@ const NavMain = ({
     }[];
   }[];
 }) => {
+  // Function to update breadcrumbs when navigation item is clicked
+  const updateBreadcrumbs = (mainItem: string, subItem?: string) => {
+    const path = subItem ? [mainItem, subItem] : [mainItem];
+    // Dispatch custom event for Navbar to listen to
+    const event = new CustomEvent("sidebarNavChange", {
+      detail: { path },
+    });
+    window.dispatchEvent(event);
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Pay Cash Management</SidebarGroupLabel>
@@ -296,7 +306,10 @@ const NavMain = ({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  onClick={() => updateBreadcrumbs(item.title)}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   {item.items && item.items.length > 0 && (
@@ -310,7 +323,12 @@ const NavMain = ({
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild>
+                        <SidebarMenuSubButton
+                          asChild
+                          onClick={() =>
+                            updateBreadcrumbs(item.title, subItem.title)
+                          }
+                        >
                           <a href={subItem.url}>
                             <span className="text-gray-500 text-xs">
                               {subItem.title}
@@ -352,7 +370,7 @@ const NavUser = ({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={user.avatar || '/placeholder.svg'}
+                  src={user.avatar || "/placeholder.svg"}
                   alt={user.name}
                 />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
@@ -366,7 +384,7 @@ const NavUser = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? 'bottom' : 'right'}
+            side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
@@ -374,7 +392,7 @@ const NavUser = ({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={user.avatar || '/placeholder.svg'}
+                    src={user.avatar || "/placeholder.svg"}
                     alt={user.name}
                   />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>

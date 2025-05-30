@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +118,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Global search styles */
+  [data-slot="sidebar-input"] {
+    @apply bg-background/80 backdrop-blur-sm;
+  }
+
+  /* Breadcrumb styles */
+  [data-slot="breadcrumb"] {
+    @apply text-sm font-medium;
   }
 }

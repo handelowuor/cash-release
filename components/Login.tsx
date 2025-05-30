@@ -48,10 +48,14 @@ export default function LoginPage() {
 
     try {
       // Use the login function from AuthContext
-      await login(identifier, password);
+      await login(identifier, password, "/dashboard");
       // Login successful - the AuthContext will handle state updates
     } catch (error: any) {
-      setLoginError(error.message || "Login failed");
+      console.error("Login error:", error);
+      setLoginError(
+        error.message ||
+          "Login failed. Please check your credentials and try again.",
+      );
       setIsLoading(false);
       return;
     }

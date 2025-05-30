@@ -74,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
+        credentials: "include", // Include cookies in the request
       });
 
       if (!response.ok) {
@@ -121,20 +122,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         name: name || "",
         role: role ?? undefined,
         userType: userType,
-        permissions: permissions,
-        modules: modules,
-        features: features,
-        apps: apps,
+        permissions: permissions || [],
+        modules: modules || [],
+        features: features || [],
+        apps: apps || [],
         token,
       };
       // Store in state and localStorage
       setUser(newUser);
       setUserRoles(role ? [role] : []);
-      setUserPermissions(permissions);
+      setUserPermissions(permissions || []);
       localStorage.setItem("user", JSON.stringify(newUser));
 
+      // Redirect to dashboard after successful login if no specific path is provided
       if (redirectPath) {
         window.location.href = redirectPath;
+      } else {
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       console.error("Login failed:", error);
