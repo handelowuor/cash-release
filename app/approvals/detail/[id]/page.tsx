@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,9 @@ type ExpenseItemDetail = {
   id: string;
   description: string;
   amount: number;
+  currency?: string;
+  exchangeRate?: number;
+  finalAmount?: number;
   category: ExpenseCategory;
   date: string;
   status: ExpenseStatus;
@@ -160,7 +163,7 @@ const mockBudgetData: Record<ExpenseCategory, BudgetInfo> = {
   },
 };
 
-// Mock data for a single approval with items
+// Add a foreign currency item to demonstrate exchange rates
 const getMockApprovalDetail = (id: string): ApprovalDetail => ({
   id,
   requestNumber: "REQ-2023-001",
@@ -209,9 +212,39 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
   ],
   items: [
     {
+      id: "item-004",
+      description: "International Conference Fee",
+      amount: 100,
+      currency: "USD",
+      exchangeRate: 130.5,
+      finalAmount: 13050,
+      category: ExpenseCategory.TRAINING,
+      date: "2023-06-09",
+      status: ExpenseStatus.SUBMITTED,
+      attachments: [
+        {
+          id: "att-005",
+          name: "conference-receipt.pdf",
+          type: "application/pdf",
+          url: "#",
+        },
+      ],
+      comments: [
+        {
+          id: "item-comment-4",
+          author: "John Doe",
+          text: "Conference registration fee paid in USD.",
+          timestamp: "2023-06-15T10:30:00",
+        },
+      ],
+    },
+    {
       id: "item-001",
       description: "Transportation to Nakuru",
       amount: 5000,
+      currency: "KES",
+      exchangeRate: 1,
+      finalAmount: 5000,
       category: ExpenseCategory.TRAVEL,
       date: "2023-06-10",
       status: ExpenseStatus.SUBMITTED,
@@ -236,6 +269,9 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
       id: "item-002",
       description: "Accommodation in Nakuru",
       amount: 7000,
+      currency: "KES",
+      exchangeRate: 1,
+      finalAmount: 7000,
       category: ExpenseCategory.ACCOMMODATION,
       date: "2023-06-11",
       status: ExpenseStatus.SUBMITTED,
@@ -266,6 +302,9 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
       id: "item-003",
       description: "Meals during stay",
       amount: 3000,
+      currency: "KES",
+      exchangeRate: 1,
+      finalAmount: 3000,
       category: ExpenseCategory.MEALS,
       date: "2023-06-12",
       status: ExpenseStatus.SUBMITTED,
@@ -352,11 +391,12 @@ const getBudgetStatusColor = (
 export default function ApprovalDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const resolvedParams = use(params);
   const [approval, setApproval] = useState<ApprovalDetail>(
-    getMockApprovalDetail(params.id),
+    getMockApprovalDetail(resolvedParams.id),
   );
   const [activeTab, setActiveTab] = useState("details");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -794,8 +834,17 @@ export default function ApprovalDetailPage({
                         </div>
                         <div className="mt-2">
                           <p className="font-bold">
-                            {formatCurrency(item.amount)}
+                            {formatCurrency(item.amount)}{" "}
+                            {item.currency || "KES"}
                           </p>
+                          {item.currency &&
+                            item.currency !== "KES" &&
+                            item.finalAmount && (
+                              <p className="text-sm text-muted-foreground">
+                                {formatCurrency(item.finalAmount)} KES @{" "}
+                                {item.exchangeRate} KES/{item.currency}
+                              </p>
+                            )}
                         </div>
                         {item.attachments.length > 0 && (
                           <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
@@ -836,8 +885,34 @@ export default function ApprovalDetailPage({
                               Amount
                             </div>
                             <p className="text-xl font-bold">
-                              {formatCurrency(selectedItem.amount)}
+                              {formatCurrency(selectedItem.amount)}{" "}
+                              {selectedItem.currency || "KES"}
                             </p>
+                            {selectedItem.currency &&
+                              selectedItem.currency !== "KES" &&
+                              selectedItem.exchangeRate && (
+                                <div className="mt-1">
+                                  <span className="text-sm text-muted-foreground">
+                                    Exchange Rate:{" "}
+                                  </span>
+                                  <span className="text-sm font-medium">
+                                    {selectedItem.exchangeRate} KES/
+                                    {selectedItem.currency}
+                                  </span>
+                                </div>
+                              )}
+                            {selectedItem.finalAmount !== selectedItem.amount &&
+                              selectedItem.finalAmount && (
+                                <div className="mt-1">
+                                  <span className="text-sm text-muted-foreground">
+                                    Final Amount:{" "}
+                                  </span>
+                                  <span className="text-sm font-medium">
+                                    {formatCurrency(selectedItem.finalAmount)}{" "}
+                                    KES
+                                  </span>
+                                </div>
+                              )}
                           </div>
                           <div>
                             <div className="text-sm text-muted-foreground mb-1">
