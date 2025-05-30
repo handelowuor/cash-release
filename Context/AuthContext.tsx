@@ -44,6 +44,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const authService = new AuthService();
   const isAuthenticated = !!user?.token;
 
+  // Debug authentication state
+  useEffect(() => {
+    console.log("Authentication state changed:", {
+      isAuthenticated,
+      hasUser: !!user,
+      hasToken: !!user?.token,
+      tokenLength: user?.token ? user.token.length : 0,
+      permissions: user?.permissions?.length || 0,
+    });
+  }, [isAuthenticated, user]);
+
   const checkPermission = async (
     module: string,
     action: string,
@@ -55,10 +66,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setUserRoles(parsedUser.role ? [parsedUser.role] : []);
-      setUserPermissions(parsedUser.permissions || []);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && parsedUser.token) {
+          setUser(parsedUser);
+          setUserRoles(parsedUser.role ? [parsedUser.role] : []);
+          setUserPermissions(parsedUser.permissions || []);
+          console.log("User authenticated from localStorage", {
+            isAuthenticated: true,
+            token: parsedUser.token.substring(0, 10) + "...",
+            permissions: parsedUser.permissions?.length || 0,
+          });
+        } else {
+          console.log("Invalid user data in localStorage");
+          localStorage.removeItem("user");
+        }
+      } catch (error) {
+        console.error("Error parsing user data from localStorage:", error);
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -69,6 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       setIsLoading(true);
+      console.log("Attempting login with:", { identifier });
+
       // Use API route instead of direct authService call
       const response = await fetch("/api/login", {
         method: "POST",
@@ -77,12 +105,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         credentials: "include", // Include cookies in the request
       });
 
+      console.log("Login response status:", response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Login failed");
       }
 
-      const token = await response.json();
+      const tokenResponse = await response.json();
+      console.log("Token response received", { hasToken: !!tokenResponse });
+
+      // Handle different response formats
+      const token = tokenResponse.access_token || tokenResponse;
 
       // Store the token immediately to ensure it's available for potential refresh
       const tempUser = { token };
@@ -149,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    console.log("Logging out user");
     localStorage.removeItem("user");
     setUser(null);
     setUserRoles([]);

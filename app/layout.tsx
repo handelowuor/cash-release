@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import { TempoInit } from "./tempo-init";
+import { AuthProvider } from "@/Context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,8 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Script src="https://api.tempo.new/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js" />
-        <TempoInit />
-        {children}
+        <AuthProvider>
+          <TempoInit />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

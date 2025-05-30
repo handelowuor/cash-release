@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthProvider } from "@/Context/AuthContext";
 import { useAuth } from "@/Context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -35,9 +34,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AuthProvider>
-      <AuthCheck>{children}</AuthCheck>
-    </AuthProvider>
-  );
+  return <AuthCheck>{children}</AuthCheck>;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import LoginPage from "@/components/Login";
-import { AuthProvider } from "@/Context/AuthContext";
 import Layout from "@/components/Layout";
 import { MobileAppResourcesSection } from "@/components/MobileAppResourcesSections";
 import { PendingTasksSection } from "@/components/PendingTasksSection";
@@ -30,11 +29,7 @@ const Home = () => {
     router.push("/dashboard");
   }, [router]);
 
-  return (
-    <AuthProvider>
-      <HomeContent />
-    </AuthProvider>
-  );
+  return <HomeContent />;
 };
 
 const HomeContent = () => {
@@ -43,9 +38,7 @@ const HomeContent = () => {
   if (!isAuthenticated) {
     return (
       <div className="h-[100vh]">
-        <AuthProvider>
-          <LoginPage />
-        </AuthProvider>
+        <LoginPage />
       </div>
     );
   }

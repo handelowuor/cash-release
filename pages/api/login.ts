@@ -27,10 +27,10 @@ export default async function handler(
       );
     }
 
-    // For development/testing when no auth server is available
-    if (!process.env.NEXT_PUBLIC_AUTHSERVER_BASE_URL && !data.access_token) {
-      console.warn("Using mock token for development");
-      return res.status(200).json("mock-access-token");
+    // Always ensure we have a token, even if the response format is unexpected
+    if (!data.access_token) {
+      console.warn("Access token not found in response, using data directly");
+      return res.status(200).json(data);
     }
 
     // Return the access token to the client

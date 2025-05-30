@@ -47,8 +47,11 @@ export default function LoginPage() {
     }
 
     try {
+      console.log("Login form submitted with:", { identifier });
+
       // Use the login function from AuthContext
       await login(identifier, password, "/dashboard");
+      console.log("Login function completed successfully");
       // Login successful - the AuthContext will handle state updates
     } catch (error: any) {
       console.error("Login error:", error);
