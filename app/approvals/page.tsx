@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import AppSidebar from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExpenseStatus, ExpenseType } from "@/Models/expense";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 type ApprovalItem = {
   id: string;
@@ -156,150 +154,142 @@ export default function ApprovalsPage() {
       : approvals.filter((item) => item.type === selectedFilter);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarProvider>
-        <AppSidebar className="hidden md:flex" />
-      </SidebarProvider>
-
-      <div className="flex-1 overflow-auto">
-        <main className="p-6 md:p-10 max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-2">Pending Approvals</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Review and approve expense requests from your team
-            </p>
-          </div>
-
-          <div className="mb-6">
-            <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button
-                type="button"
-                onClick={() => setSelectedFilter("all")}
-                className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                  selectedFilter === "all"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                } border border-gray-200 dark:border-gray-600`}
-              >
-                All
-              </button>
-              {Object.values(ExpenseType).map((type, index) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setSelectedFilter(type)}
-                  className={`px-4 py-2 text-sm font-medium ${
-                    selectedFilter === type
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                  } border border-gray-200 dark:border-gray-600 ${index === Object.values(ExpenseType).length - 1 ? "rounded-r-lg" : ""}`}
-                >
-                  {getTypeLabel(type)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">
-                Requests Awaiting Your Approval
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
-                    <tr>
-                      <th scope="col" className="px-6 py-3">
-                        Request
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Type
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Amount
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Requested By
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Department
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Date
-                      </th>
-                      <th scope="col" className="px-6 py-3">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredApprovals.map((item) => (
-                      <tr
-                        key={item.id}
-                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {item.title}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.requestNumber}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge
-                            variant="secondary"
-                            className={getTypeColor(item.type)}
-                          >
-                            {getTypeLabel(item.type)}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 font-medium">
-                          {formatCurrency(item.amount)}
-                        </td>
-                        <td className="px-6 py-4">{item.requestedBy}</td>
-                        <td className="px-6 py-4">{item.department}</td>
-                        <td className="px-6 py-4">
-                          {formatDate(item.requestedAt)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprove(item.id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleReject(item.id)}
-                              className="text-red-600 border-red-600 hover:bg-red-50"
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {filteredApprovals.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 dark:text-gray-400">
-                      No pending approvals found
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </main>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-2">Pending Approvals</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Review and approve expense requests from your team
+        </p>
       </div>
+
+      <div className="mb-6">
+        <div className="inline-flex rounded-md shadow-sm" role="group">
+          <button
+            type="button"
+            onClick={() => setSelectedFilter("all")}
+            className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+              selectedFilter === "all"
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            } border border-gray-200 dark:border-gray-600`}
+          >
+            All
+          </button>
+          {Object.values(ExpenseType).map((type, index) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setSelectedFilter(type)}
+              className={`px-4 py-2 text-sm font-medium ${
+                selectedFilter === type
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              } border border-gray-200 dark:border-gray-600 ${index === Object.values(ExpenseType).length - 1 ? "rounded-r-lg" : ""}`}
+            >
+              {getTypeLabel(type)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">
+            Requests Awaiting Your Approval
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Request
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Type
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Amount
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Requested By
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Department
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Date
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredApprovals.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {item.title}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {item.requestNumber}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge
+                        variant="secondary"
+                        className={getTypeColor(item.type)}
+                      >
+                        {getTypeLabel(item.type)}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 font-medium">
+                      {formatCurrency(item.amount)}
+                    </td>
+                    <td className="px-6 py-4">{item.requestedBy}</td>
+                    <td className="px-6 py-4">{item.department}</td>
+                    <td className="px-6 py-4">
+                      {formatDate(item.requestedAt)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprove(item.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(item.id)}
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {filteredApprovals.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No pending approvals found
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

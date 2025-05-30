@@ -59,9 +59,9 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/placeholder.svg?height=32&width=32",
+    name: "Super Admin",
+    email: "it.support@sunculture.io",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sunculture",
   },
   teams: [
     {
@@ -83,28 +83,28 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: LayoutDashboard,
       isActive: true,
     },
     {
       title: "My Expenses",
-      url: "#",
+      url: "/expenses",
       icon: DollarSign,
       items: [
         {
           title: "Submit Expense",
-          url: "#",
+          url: "/expenses/new",
         },
         {
           title: "My Advances",
-          url: "#",
+          url: "/expenses/advances",
         },
       ],
     },
     {
       title: "Approvals",
-      url: "#",
+      url: "/approvals",
       icon: BookOpen,
       items: [
         {
@@ -291,6 +291,21 @@ const NavMain = ({
       detail: { path },
     });
     window.dispatchEvent(event);
+
+    // Navigate to the corresponding page if available
+    const routeMap: Record<string, string> = {
+      Dashboard: "/dashboard",
+      "My Expenses": "/expenses",
+      "Submit Expense": "/expenses/new",
+      Approvals: "/approvals",
+      "Expense Approval": "/approvals",
+    };
+
+    const targetPath =
+      subItem && routeMap[subItem] ? routeMap[subItem] : routeMap[mainItem];
+    if (targetPath && typeof window !== "undefined") {
+      window.location.href = targetPath;
+    }
   };
 
   return (
@@ -329,7 +344,7 @@ const NavMain = ({
                             updateBreadcrumbs(item.title, subItem.title)
                           }
                         >
-                          <a href={subItem.url}>
+                          <a href="#">
                             <span className="text-gray-500 text-xs">
                               {subItem.title}
                             </span>
