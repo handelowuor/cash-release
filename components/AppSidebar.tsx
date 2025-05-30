@@ -93,8 +93,8 @@ const data = {
       icon: DollarSign,
       items: [
         {
-          title: "Submit Expense",
-          url: "/expenses/new",
+          title: "Reimbursements",
+          url: "/expenses/reimbursements",
         },
         {
           title: "My Advances",
@@ -296,7 +296,7 @@ const NavMain = ({
     const routeMap: Record<string, string> = {
       Dashboard: "/dashboard",
       "My Expenses": "/expenses",
-      "Submit Expense": "/expenses/new",
+      Reimbursements: "/expenses/reimbursements",
       Approvals: "/approvals",
       "Expense Approval": "/approvals",
       Users: "/users",

@@ -21,6 +21,7 @@ export interface User {
   email: string;
   employeeId?: string;
   mobile?: string;
+  nationalId?: string;
   role: UserRole;
   department?: string;
   status: UserStatus;

@@ -28,6 +28,7 @@ export default function NewUserPage() {
     employeeId: "",
     email: "",
     mobile: "",
+    nationalId: "",
     role: "",
     submitsTo: "",
     department: "",
@@ -35,18 +36,7 @@ export default function NewUserPage() {
     skipInvitation: false,
   });
 
-  const [departments, setDepartments] = useState([
-    { id: "1", name: "Engineering", description: "Technical team" },
-    { id: "2", name: "Finance", description: "Financial operations" },
-    { id: "3", name: "Marketing", description: "Marketing and communications" },
-    { id: "4", name: "Sales", description: "Sales and business development" },
-    { id: "5", name: "HR", description: "Human resources" },
-  ]);
-
-  const [newDepartment, setNewDepartment] = useState({
-    name: "",
-    description: "",
-  });
+  // Department management has been moved to a separate page under Settings
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -68,24 +58,7 @@ export default function NewUserPage() {
     router.push("/users");
   };
 
-  const handleAddDepartment = () => {
-    if (newDepartment.name.trim() === "") return;
-
-    const newId = (departments.length + 1).toString();
-    setDepartments([
-      ...departments,
-      {
-        id: newId,
-        name: newDepartment.name,
-        description: newDepartment.description,
-      },
-    ]);
-    setNewDepartment({ name: "", description: "" });
-  };
-
-  const handleRemoveDepartment = (id: string) => {
-    setDepartments(departments.filter((dept) => dept.id !== id));
-  };
+  // Department management functions have been moved to a separate page under Settings
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -181,6 +154,16 @@ export default function NewUserPage() {
                   name="mobile"
                   type="tel"
                   value={formData.mobile}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nationalId">National ID</Label>
+                <Input
+                  id="nationalId"
+                  name="nationalId"
+                  value={formData.nationalId || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -341,105 +324,7 @@ export default function NewUserPage() {
         </div>
       )}
 
-      {/* Department Management Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Department Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Add New Department */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Add New Department</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="departmentName">Department Name</Label>
-                  <Input
-                    id="departmentName"
-                    value={newDepartment.name}
-                    onChange={(e) =>
-                      setNewDepartment({
-                        ...newDepartment,
-                        name: e.target.value,
-                      })
-                    }
-                    placeholder="Enter department name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="departmentDescription">Description</Label>
-                  <Input
-                    id="departmentDescription"
-                    value={newDepartment.description}
-                    onChange={(e) =>
-                      setNewDepartment({
-                        ...newDepartment,
-                        description: e.target.value,
-                      })
-                    }
-                    placeholder="Enter department description"
-                  />
-                </div>
-              </div>
-              <Button
-                onClick={handleAddDepartment}
-                type="button"
-                className="mt-2"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Department
-              </Button>
-            </div>
-
-            <Separator />
-
-            {/* Department List */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Existing Departments</h3>
-              <div className="rounded-md border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50 text-muted-foreground">
-                      <th className="py-3 px-4 text-left">Name</th>
-                      <th className="py-3 px-4 text-left">Description</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {departments.map((dept) => (
-                      <tr key={dept.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4">{dept.name}</td>
-                        <td className="py-3 px-4">{dept.description}</td>
-                        <td className="py-3 px-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveDepartment(dept.id)}
-                            className="text-destructive hover:text-destructive/90"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {departments.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-6 text-center text-muted-foreground"
-                        >
-                          No departments found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Note: Department Management has been moved to a separate page under Settings */}
     </div>
   );
 }

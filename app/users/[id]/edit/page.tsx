@@ -32,6 +32,7 @@ const mockUsers = [
     employeeId: "EMP001",
     email: "john.doe@sunculture.io",
     mobile: "+254712345678",
+    nationalId: "12345678",
     role: UserRole.EMPLOYEE,
     submitsTo: "user3",
     department: "engineering",
@@ -74,6 +75,7 @@ export default function EditUserPage({ params }: { params?: { id: string } }) {
     employeeId: "",
     email: "",
     mobile: "",
+    nationalId: "",
     role: "",
     submitsTo: "",
     department: "",
@@ -96,6 +98,7 @@ export default function EditUserPage({ params }: { params?: { id: string } }) {
         employeeId: user.employeeId,
         email: user.email,
         mobile: user.mobile,
+        nationalId: user.nationalId || "",
         role: user.role,
         submitsTo: user.submitsTo,
         department: user.department,
@@ -226,6 +229,16 @@ export default function EditUserPage({ params }: { params?: { id: string } }) {
                       name="mobile"
                       type="tel"
                       value={formData.mobile}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nationalId">National ID</Label>
+                    <Input
+                      id="nationalId"
+                      name="nationalId"
+                      value={formData.nationalId}
                       onChange={handleChange}
                     />
                   </div>

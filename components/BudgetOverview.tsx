@@ -56,14 +56,9 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "KES",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+import { formatCurrency } from "@/lib/currency";
+
+// Using the imported formatCurrency function instead
 
 export function BudgetOverview() {
   const totalAllocated = budgetData.reduce(

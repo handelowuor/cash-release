@@ -15,6 +15,18 @@ export default function NewExpensePage() {
     try {
       // In a real app, this would be an API call
       console.log("Submitting expense:", data);
+      console.log("Total amount:", data.totalAmount);
+      console.log("Number of expense items:", data.items.length);
+      console.log("Is editing existing request:", data.isEditing);
+
+      // All items now use the same output currency and exchange rate
+      console.log(`Output currency: ${data.outputCurrency}`);
+      console.log(`Output exchange rate: ${data.outputExchangeRate}`);
+
+      data.items.forEach((item: any, index: number) => {
+        console.log(`Item ${index + 1} amount:`, item.amount);
+      });
+
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert("Expense submitted successfully!");
@@ -28,7 +40,7 @@ export default function NewExpensePage() {
   };
 
   return (
-    <div>
+    <div className="w-full">
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">New Expense Request</h1>
         <p className="text-gray-600 dark:text-gray-400">

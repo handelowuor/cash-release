@@ -16,6 +16,7 @@ import {
   Edit,
   Trash,
   History,
+  Calendar,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -227,6 +228,14 @@ export default function UsersPage() {
                           >
                             <History className="mr-2 h-4 w-4" />
                             View History
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(`/users/${user.id}/out-of-office`)
+                            }
+                          >
+                            <Calendar className="mr-2 h-4 w-4" />
+                            Out of Office
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
                             <Trash className="mr-2 h-4 w-4" />
