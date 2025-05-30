@@ -85,6 +85,22 @@ export interface Expense {
   updatedAt: Date;
 }
 
+export enum BudgetUploadType {
+  MANUAL = "MANUAL",
+  IMPORTED = "IMPORTED",
+}
+
+export interface BudgetHistoryEntry {
+  id: string;
+  budgetId: string;
+  action: string; // 'CREATED', 'UPDATED', 'DELETED'
+  oldValue?: number;
+  newValue?: number;
+  editedBy: string;
+  editedAt: Date;
+  comment?: string;
+}
+
 export interface Budget {
   id: string;
   department: string;
@@ -97,6 +113,18 @@ export interface Budget {
   uploadedAt: Date;
   updatedBy?: string;
   updatedAt?: Date;
+  uploadType: BudgetUploadType;
+  categoryId?: string;
+  categoryName?: string;
+  isActive: boolean;
+  history?: BudgetHistoryEntry[];
+  startDate?: string;
+  endDate?: string;
+  businessOrgId?: string;
+  businessOrgName?: string;
+  countryId?: string;
+  countryName?: string;
+  currencyCode?: string;
 }
 
 export interface Department {

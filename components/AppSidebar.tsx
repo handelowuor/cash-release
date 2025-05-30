@@ -154,7 +154,7 @@ const data = {
       items: [
         {
           title: "Budgets",
-          url: "#",
+          url: "/settings/budgets",
         },
         {
           title: "Budget Requests",
