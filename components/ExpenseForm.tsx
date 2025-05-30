@@ -19,6 +19,8 @@ interface ExpenseFormProps {
   isLoading?: boolean;
   initialData?: any;
   expenseType: ExpenseType;
+  isAccountability?: boolean;
+  originalExpenseId?: string;
 }
 
 type AttachmentFile = File & {
@@ -43,10 +45,21 @@ export function ExpenseForm({
   isLoading = false,
   initialData,
   expenseType,
+  isAccountability = false,
+  originalExpenseId,
 }: ExpenseFormProps) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
     initialData?.description || "",
+  );
+
+  // Payment details
+  const [payeeName, setPayeeName] = useState(initialData?.payeeName || "");
+  const [payeeNumber, setPayeeNumber] = useState(
+    initialData?.payeeNumber || "254",
+  );
+  const [nationalIdPin, setNationalIdPin] = useState(
+    initialData?.nationalIdPin || "",
   );
 
   // Multiple expense items
@@ -90,6 +103,8 @@ export function ExpenseForm({
           date: new Date(item.date).toISOString().split("T")[0],
           attachments: item.attachments || [],
           notes: item.notes || "",
+          currency: item.currency || outputCurrency,
+          exchangeRate: item.exchangeRate || outputExchangeRate,
         }));
         setItems(formattedItems);
       } else {
@@ -190,12 +205,17 @@ export function ExpenseForm({
     onSubmit({
       title,
       description,
+      payeeName,
+      payeeNumber,
+      nationalIdPin,
       items: formattedItems,
       type: expenseType,
       totalAmount: totalAmount,
       outputCurrency: outputCurrency,
       outputExchangeRate: outputExchangeRate,
       isEditing: isEditing,
+      isAccountability: isAccountability,
+      originalExpenseId: originalExpenseId,
     });
   };
 
@@ -253,6 +273,9 @@ export function ExpenseForm({
           }),
         );
       }
+
+      // Clear the file input to allow uploading the same file again
+      e.target.value = "";
     }
   };
 
@@ -280,6 +303,10 @@ export function ExpenseForm({
   };
 
   const getFormTitle = () => {
+    if (isAccountability) {
+      return "Submit Expense Accountability";
+    }
+
     switch (expenseType) {
       case ExpenseType.ADVANCE:
         return "Request Cash Advance";
@@ -352,6 +379,53 @@ export function ExpenseForm({
               onChange={(e) => setDescription(e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-4 border border-gray-200 rounded-md p-4">
+            <h3 className="font-medium">Payment Details</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="payeeName">Payee Name</Label>
+              <Input
+                id="payeeName"
+                placeholder="Enter the full name of the payee"
+                value={payeeName}
+                onChange={(e) => setPayeeName(e.target.value)}
+                required
+              />
+              <p className="text-xs text-gray-500">
+                Enter the full name of the payee.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payeeNumber">Payee Number</Label>
+              <Input
+                id="payeeNumber"
+                placeholder="254"
+                value={payeeNumber}
+                onChange={(e) => setPayeeNumber(e.target.value)}
+                required
+              />
+              <p className="text-xs text-gray-500">
+                Enter the payee's contact or reference number.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nationalIdPin">National ID / PIN No</Label>
+              <Input
+                id="nationalIdPin"
+                placeholder="Enter National ID or PIN number"
+                value={nationalIdPin}
+                onChange={(e) => setNationalIdPin(e.target.value)}
+                required
+              />
+              <p className="text-xs text-gray-500">
+                Enter the national ID for individuals or PIN for companies. Use
+                "0" if unsure.
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -614,9 +688,9 @@ export function ExpenseForm({
                           fileInputRef.current.click();
                         }
                       }}
-                      className="text-xs"
+                      className="text-xs flex items-center gap-1"
                     >
-                      Upload Files
+                      <Plus className="h-3 w-3" /> Upload Files
                     </Button>
                     <p className="text-xs text-gray-500">
                       Upload receipts, invoices, or other supporting documents

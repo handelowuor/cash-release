@@ -216,7 +216,13 @@ export default function ExpensesPage() {
                       <thead>
                         <tr className="border-b bg-muted/50 text-muted-foreground">
                           <th className="py-3 px-4 text-left">Description</th>
-                          <th className="py-3 px-4 text-left">Amount (KES)</th>
+                          <th className="py-3 px-4 text-left">
+                            Total Amount (KES)
+                          </th>
+                          <th className="py-3 px-4 text-left">
+                            Approved Amount (KES)
+                          </th>
+                          <th className="py-3 px-4 text-left">Balance (KES)</th>
                           <th className="py-3 px-4 text-left">Date</th>
                           <th className="py-3 px-4 text-left">Status</th>
                         </tr>
@@ -233,23 +239,54 @@ export default function ExpensesPage() {
                               {expense.amount.toLocaleString()}
                             </td>
                             <td className="py-3 px-4">
+                              {expense.status === "approved"
+                                ? expense.amount.toLocaleString()
+                                : "0"}
+                            </td>
+                            <td className="py-3 px-4">
+                              {expense.status === "approved"
+                                ? "0"
+                                : expense.amount.toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4">
                               {new Date(expense.date).toLocaleDateString()}
                             </td>
                             <td className="py-3 px-4">
-                              <Badge
-                                variant="outline"
-                                className={getStatusBadgeColor(expense.status)}
-                              >
-                                {expense.status.charAt(0).toUpperCase() +
-                                  expense.status.slice(1)}
-                              </Badge>
+                              <div className="flex flex-col gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={getStatusBadgeColor(
+                                    expense.status,
+                                  )}
+                                >
+                                  {expense.status.charAt(0).toUpperCase() +
+                                    expense.status.slice(1)}
+                                </Badge>
+                                {expense.type === ExpenseType.ADVANCE &&
+                                  expense.status === "approved" &&
+                                  !expense.accountabilityId && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(
+                                          `/approvals/accountabilities/new/${expense.id}`,
+                                        );
+                                      }}
+                                    >
+                                      Submit Accountability
+                                    </Button>
+                                  )}
+                              </div>
                             </td>
                           </tr>
                         ))}
                         {paginatedExpenses.length === 0 && (
                           <tr>
                             <td
-                              colSpan={4}
+                              colSpan={6}
                               className="py-6 text-center text-muted-foreground"
                             >
                               No {activeTab.toLowerCase()}s found

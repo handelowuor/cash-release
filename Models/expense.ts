@@ -80,6 +80,7 @@ export interface Expense {
   budgetExceptionApproved?: boolean;
   budgetExceptionApprovedBy?: string;
   budgetExceptionApprovedAt?: Date;
+  accountabilityId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

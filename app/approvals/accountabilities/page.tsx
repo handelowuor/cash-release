@@ -8,7 +8,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { ExpenseStatus, ExpenseType } from "@/Models/expense";
 import { useRouter } from "next/navigation";
 
-type ApprovalItem = {
+type AccountabilityItem = {
   id: string;
   requestNumber: string;
   title: string;
@@ -18,63 +18,45 @@ type ApprovalItem = {
   requestedBy: string;
   requestedAt: string;
   department: string;
+  originalExpenseId: string;
 };
 
-const mockApprovals: ApprovalItem[] = [
+const mockAccountabilities: AccountabilityItem[] = [
   {
-    id: "exp-001",
-    requestNumber: "REQ-2023-001",
-    title: "Field visit to Nakuru",
-    type: ExpenseType.ADVANCE,
+    id: "acc-001",
+    requestNumber: "ACC-2023-001",
+    title: "Field visit to Nakuru - Accountability",
+    type: ExpenseType.ACCOUNTABILITY,
     status: ExpenseStatus.SUBMITTED,
-    amount: 15000,
+    amount: 14500,
     requestedBy: "John Doe",
-    requestedAt: "2023-06-15T10:30:00",
+    requestedAt: "2023-06-20T10:30:00",
     department: "Sales",
+    originalExpenseId: "exp-001",
   },
   {
-    id: "exp-002",
-    requestNumber: "REQ-2023-002",
-    title: "Office supplies purchase",
-    type: ExpenseType.REIMBURSEMENT,
+    id: "acc-002",
+    requestNumber: "ACC-2023-002",
+    title: "Conference attendance - Accountability",
+    type: ExpenseType.ACCOUNTABILITY,
     status: ExpenseStatus.SUBMITTED,
-    amount: 5200,
+    amount: 22000,
     requestedBy: "Jane Smith",
-    requestedAt: "2023-06-14T14:45:00",
+    requestedAt: "2023-06-19T14:45:00",
     department: "Operations",
+    originalExpenseId: "exp-004",
   },
   {
-    id: "exp-003",
-    requestNumber: "REQ-2023-003",
-    title: "Client meeting transportation",
-    type: ExpenseType.REIMBURSEMENT,
+    id: "acc-003",
+    requestNumber: "ACC-2023-003",
+    title: "Training workshop - Accountability",
+    type: ExpenseType.ACCOUNTABILITY,
     status: ExpenseStatus.SUBMITTED,
-    amount: 3500,
-    requestedBy: "Michael Johnson",
-    requestedAt: "2023-06-13T09:15:00",
-    department: "Marketing",
-  },
-  {
-    id: "exp-004",
-    requestNumber: "REQ-2023-004",
-    title: "Sales commission Q2",
-    type: ExpenseType.PAYOUT,
-    status: ExpenseStatus.SUBMITTED,
-    amount: 25000,
-    requestedBy: "Sarah Williams",
-    requestedAt: "2023-06-12T16:20:00",
-    department: "Sales",
-  },
-  {
-    id: "exp-005",
-    requestNumber: "REQ-2023-005",
-    title: "Training workshop materials",
-    type: ExpenseType.ADVANCE,
-    status: ExpenseStatus.SUBMITTED,
-    amount: 8000,
+    amount: 7800,
     requestedBy: "David Brown",
-    requestedAt: "2023-06-11T11:05:00",
+    requestedAt: "2023-06-18T09:15:00",
     department: "HR",
+    originalExpenseId: "exp-005",
   },
 ];
 
@@ -110,8 +92,6 @@ const getTypeColor = (type: ExpenseType) => {
 
 import { formatCurrency } from "@/lib/currency";
 
-// Using the imported formatCurrency function instead
-
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
@@ -121,48 +101,39 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
-export default function ApprovalsPage() {
+export default function AccountabilitiesPage() {
   const router = useRouter();
-  const [approvals, setApprovals] = useState<ApprovalItem[]>(mockApprovals);
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [accountabilities, setAccountabilities] =
+    useState<AccountabilityItem[]>(mockAccountabilities);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const handleApproveItem = (expenseId: string, itemId: string) => {
+  const handleApproveItem = (accountabilityId: string, itemId: string) => {
     // In a real implementation, this would update just the specific item
-    // For now, we'll just update the whole expense status as a placeholder
-    setApprovals(
-      approvals.map((expense) =>
-        expense.id === expenseId
-          ? { ...expense, status: ExpenseStatus.APPROVED_BY_HOD }
-          : expense,
+    // For now, we'll just update the whole accountability status as a placeholder
+    setAccountabilities(
+      accountabilities.map((accountability) =>
+        accountability.id === accountabilityId
+          ? { ...accountability, status: ExpenseStatus.APPROVED_BY_HOD }
+          : accountability,
       ),
     );
   };
 
-  const handleRejectItem = (expenseId: string, itemId: string) => {
+  const handleRejectItem = (accountabilityId: string, itemId: string) => {
     // In a real implementation, this would update just the specific item
-    // For now, we'll just update the whole expense status as a placeholder
-    setApprovals(
-      approvals.map((expense) =>
-        expense.id === expenseId
-          ? { ...expense, status: ExpenseStatus.REJECTED_BY_HOD }
-          : expense,
+    // For now, we'll just update the whole accountability status as a placeholder
+    setAccountabilities(
+      accountabilities.map((accountability) =>
+        accountability.id === accountabilityId
+          ? { ...accountability, status: ExpenseStatus.REJECTED_BY_HOD }
+          : accountability,
       ),
     );
   };
 
-  const filteredApprovals =
-    selectedFilter === "all"
-      ? approvals
-      : approvals.filter((item) => item.type === selectedFilter);
-
-  // Reset to first page when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedFilter]);
-
-  const paginatedApprovals = filteredApprovals.slice(
+  // Pagination logic
+  const paginatedAccountabilities = accountabilities.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
@@ -170,46 +141,16 @@ export default function ApprovalsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Pending Approvals</h1>
+        <h1 className="text-2xl font-bold mb-2">Pending Accountabilities</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Review and approve expense requests from your team
+          Review and approve accountability reports for advances
         </p>
-      </div>
-
-      <div className="mb-6">
-        <div className="inline-flex rounded-md shadow-sm" role="group">
-          <button
-            type="button"
-            onClick={() => setSelectedFilter("all")}
-            className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-              selectedFilter === "all"
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            } border border-gray-200 dark:border-gray-600`}
-          >
-            All
-          </button>
-          {Object.values(ExpenseType).map((type, index) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => setSelectedFilter(type)}
-              className={`px-4 py-2 text-sm font-medium ${
-                selectedFilter === type
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              } border border-gray-200 dark:border-gray-600 ${index === Object.values(ExpenseType).length - 1 ? "rounded-r-lg" : ""}`}
-            >
-              {getTypeLabel(type)}
-            </button>
-          ))}
-        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-semibold">
-            Requests Awaiting Your Approval
+            Accountability Reports Awaiting Your Approval
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -224,25 +165,13 @@ export default function ApprovalsPage() {
                     Type
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    Total Amount
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Approved Amount
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Balance
+                    Amount
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Requested By
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Department
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Requested By
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Next Approver
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Date
@@ -253,7 +182,7 @@ export default function ApprovalsPage() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedApprovals.map((item) => (
+                {paginatedAccountabilities.map((item) => (
                   <tr
                     key={item.id}
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -277,28 +206,8 @@ export default function ApprovalsPage() {
                     <td className="px-6 py-4 font-medium">
                       {formatCurrency(item.amount)}
                     </td>
-                    <td className="px-6 py-4 font-medium">
-                      {item.status === ExpenseStatus.APPROVED_BY_HOD ||
-                      item.status === ExpenseStatus.APPROVED_BY_FINANCE
-                        ? formatCurrency(item.amount)
-                        : formatCurrency(0)}
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {item.status === ExpenseStatus.APPROVED_BY_HOD ||
-                      item.status === ExpenseStatus.APPROVED_BY_FINANCE
-                        ? formatCurrency(0)
-                        : formatCurrency(item.amount)}
-                    </td>
                     <td className="px-6 py-4">{item.requestedBy}</td>
                     <td className="px-6 py-4">{item.department}</td>
-                    <td className="px-6 py-4">{item.requestedBy}</td>
-                    <td className="px-6 py-4">
-                      {item.status === ExpenseStatus.SUBMITTED
-                        ? "Sarah Manager"
-                        : item.status === ExpenseStatus.APPROVED_BY_HOD
-                          ? "Finance Team"
-                          : "N/A"}
-                    </td>
                     <td className="px-6 py-4">
                       {formatDate(item.requestedAt)}
                     </td>
@@ -307,7 +216,9 @@ export default function ApprovalsPage() {
                         <Button
                           size="sm"
                           onClick={() =>
-                            router.push(`/approvals/detail/${item.id}`)
+                            router.push(
+                              `/approvals/accountabilities/detail/${item.id}`,
+                            )
                           }
                           className="bg-blue-600 hover:bg-blue-700"
                         >
@@ -317,13 +228,13 @@ export default function ApprovalsPage() {
                     </td>
                   </tr>
                 ))}
-                {paginatedApprovals.length === 0 && (
+                {paginatedAccountabilities.length === 0 && (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={7}
                       className="py-6 text-center text-muted-foreground"
                     >
-                      No pending approvals found
+                      No pending accountabilities found
                     </td>
                   </tr>
                 )}
@@ -332,7 +243,7 @@ export default function ApprovalsPage() {
           </div>
 
           <Pagination
-            totalItems={filteredApprovals.length}
+            totalItems={accountabilities.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={setCurrentPage}

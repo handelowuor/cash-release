@@ -99,7 +99,11 @@ const data = {
       items: [
         {
           title: "Expense Approval",
-          url: "#",
+          url: "/approvals",
+        },
+        {
+          title: "Accountabilities",
+          url: "/approvals/accountabilities",
         },
         {
           title: "Budget Approval",
@@ -243,12 +247,12 @@ const data = {
       icon: Settings2,
       items: [
         {
-          title: "Add Department",
-          url: "#",
+          title: "Manage Departments",
+          url: "/settings/departments",
         },
         {
-          title: "Add Expense Category",
-          url: "#",
+          title: "Manage Expense Categories",
+          url: "/settings/expense-categories",
         },
         {
           title: "Add Exempt Expense",

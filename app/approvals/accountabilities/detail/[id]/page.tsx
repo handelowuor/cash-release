@@ -31,6 +31,7 @@ import {
   Download,
   Paperclip,
   BarChart3,
+  ArrowLeft,
 } from "lucide-react";
 
 type ExpenseItemDetail = {
@@ -68,7 +69,7 @@ type BudgetInfo = {
   currency: string;
 };
 
-type ApprovalDetail = {
+type AccountabilityDetail = {
   id: string;
   requestNumber: string;
   title: string;
@@ -80,6 +81,7 @@ type ApprovalDetail = {
   requestedBy_avatar?: string;
   requestedAt: string;
   department: string;
+  originalExpenseId: string;
   items: ExpenseItemDetail[];
   comments?: Comment[];
   history?: {
@@ -165,49 +167,50 @@ const mockBudgetData: Record<ExpenseCategory, BudgetInfo> = {
 };
 
 // Add a foreign currency item to demonstrate exchange rates
-const getMockApprovalDetail = (id: string): ApprovalDetail => ({
+const getMockAccountabilityDetail = (id: string): AccountabilityDetail => ({
   id,
-  requestNumber: "REQ-2023-001",
-  title: "Field visit to Nakuru",
-  type: ExpenseType.ADVANCE,
+  requestNumber: "ACC-2023-001",
+  title: "Field visit to Nakuru - Accountability",
+  type: ExpenseType.ACCOUNTABILITY,
   status: ExpenseStatus.SUBMITTED,
-  amount: 15000,
+  amount: 14500,
   requestedBy: "John Doe",
   requestedBy_email: "john.doe@sunculture.io",
   requestedBy_avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-  requestedAt: "2023-06-15T10:30:00",
+  requestedAt: "2023-06-20T10:30:00",
   department: "Sales",
+  originalExpenseId: "exp-001",
   comments: [
     {
       id: "comment-1",
       author: "John Doe",
-      text: "This is for the upcoming field visit to meet potential customers in Nakuru region.",
-      timestamp: "2023-06-15T10:35:00",
+      text: "Submitting accountability for the field visit to Nakuru. All expenses are documented with receipts.",
+      timestamp: "2023-06-20T10:35:00",
     },
     {
       id: "comment-2",
       author: "Sarah Manager",
-      text: "Please provide more details on the expected outcomes of this trip.",
-      timestamp: "2023-06-15T11:20:00",
+      text: "Please confirm if all the expenses match the original advance request.",
+      timestamp: "2023-06-20T11:20:00",
       isApprover: true,
     },
     {
       id: "comment-3",
       author: "John Doe",
-      text: "We expect to onboard at least 5 new customers and conduct training for existing customers in the region.",
-      timestamp: "2023-06-15T11:45:00",
+      text: "Yes, all expenses are within the approved advance amount. There's a small difference due to actual costs being slightly lower than estimated.",
+      timestamp: "2023-06-20T11:45:00",
     },
   ],
   history: [
     {
       action: "Created",
       user: "John Doe",
-      timestamp: "2023-06-15T10:30:00",
+      timestamp: "2023-06-20T10:30:00",
     },
     {
       action: "Submitted",
       user: "John Doe",
-      timestamp: "2023-06-15T10:35:00",
+      timestamp: "2023-06-20T10:35:00",
       comment: "Submitted for approval",
     },
   ],
@@ -235,17 +238,17 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
           id: "item-comment-4",
           author: "John Doe",
           text: "Conference registration fee paid in USD.",
-          timestamp: "2023-06-15T10:30:00",
+          timestamp: "2023-06-20T10:30:00",
         },
       ],
     },
     {
       id: "item-001",
       description: "Transportation to Nakuru",
-      amount: 5000,
+      amount: 4800, // Slightly less than the advance amount
       currency: "KES",
       exchangeRate: 1,
-      finalAmount: 5000,
+      finalAmount: 4800,
       category: ExpenseCategory.TRAVEL,
       date: "2023-06-10",
       status: ExpenseStatus.SUBMITTED,
@@ -261,18 +264,18 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
         {
           id: "item-comment-1",
           author: "John Doe",
-          text: "This covers round-trip transportation to Nakuru.",
-          timestamp: "2023-06-15T10:32:00",
+          text: "Actual transportation cost was lower than estimated.",
+          timestamp: "2023-06-20T10:32:00",
         },
       ],
     },
     {
       id: "item-002",
       description: "Accommodation in Nakuru",
-      amount: 7000,
+      amount: 6800, // Slightly less than the advance amount
       currency: "KES",
       exchangeRate: 1,
-      finalAmount: 7000,
+      finalAmount: 6800,
       category: ExpenseCategory.ACCOMMODATION,
       date: "2023-06-11",
       status: ExpenseStatus.SUBMITTED,
@@ -295,17 +298,17 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
           id: "item-comment-2",
           author: "John Doe",
           text: "3 nights stay at Hotel Waterbuck in Nakuru.",
-          timestamp: "2023-06-15T10:33:00",
+          timestamp: "2023-06-20T10:33:00",
         },
       ],
     },
     {
       id: "item-003",
       description: "Meals during stay",
-      amount: 3000,
+      amount: 2850, // Slightly less than the advance amount
       currency: "KES",
       exchangeRate: 1,
-      finalAmount: 3000,
+      finalAmount: 2850,
       category: ExpenseCategory.MEALS,
       date: "2023-06-12",
       status: ExpenseStatus.SUBMITTED,
@@ -322,7 +325,7 @@ const getMockApprovalDetail = (id: string): ApprovalDetail => ({
           id: "item-comment-3",
           author: "John Doe",
           text: "Meals for 3 days in Nakuru.",
-          timestamp: "2023-06-15T10:34:00",
+          timestamp: "2023-06-20T10:34:00",
         },
       ],
     },
@@ -371,42 +374,15 @@ const formatDateTime = (dateString: string) => {
   }).format(date);
 };
 
-const getBudgetStatusColor = (
-  allocated: number,
-  spent: number,
-  amount: number,
-) => {
-  const remaining = allocated - spent;
-  const wouldBeRemaining = remaining - amount;
-
-  if (wouldBeRemaining < 0) {
-    return "text-red-600 bg-red-50 border-red-200";
-  } else if (wouldBeRemaining < allocated * 0.1) {
-    // Less than 10% would remain
-    return "text-amber-600 bg-amber-50 border-amber-200";
-  } else {
-    return "text-green-600 bg-green-50 border-green-200";
-  }
-};
-
-type BudgetRequestData = {
-  itemId: string;
-  category: ExpenseCategory;
-  currentBudget: number;
-  requestedAmount: number;
-  reason: string;
-  requestedTo: string;
-};
-
-export default function ApprovalDetailPage({
+export default function AccountabilityDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
   const router = useRouter();
   const resolvedParams = use(params);
-  const [approval, setApproval] = useState<ApprovalDetail>(
-    getMockApprovalDetail(resolvedParams.id),
+  const [accountability, setAccountability] = useState<AccountabilityDetail>(
+    getMockAccountabilityDetail(resolvedParams.id),
   );
   const [activeTab, setActiveTab] = useState("details");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -416,11 +392,6 @@ export default function ApprovalDetailPage({
   const [forwardComment, setForwardComment] = useState("");
   const [showForwardModal, setShowForwardModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [showBudgetRequestModal, setShowBudgetRequestModal] = useState(false);
-  const [budgetRequestData, setBudgetRequestData] =
-    useState<BudgetRequestData | null>(null);
-  const [budgetRequestReason, setBudgetRequestReason] = useState("");
-  const [budgetRequestTo, setBudgetRequestTo] = useState("");
   const [currentDocument, setCurrentDocument] = useState<{
     name: string;
     url: string;
@@ -442,9 +413,9 @@ export default function ApprovalDetailPage({
       isApprover: true,
     };
 
-    setApproval({
-      ...approval,
-      items: approval.items.map((item) =>
+    setAccountability({
+      ...accountability,
+      items: accountability.items.map((item) =>
         item.id === itemId
           ? {
               ...item,
@@ -473,9 +444,9 @@ export default function ApprovalDetailPage({
       isApprover: true,
     };
 
-    setApproval({
-      ...approval,
-      items: approval.items.map((item) =>
+    setAccountability({
+      ...accountability,
+      items: accountability.items.map((item) =>
         item.id === itemId
           ? {
               ...item,
@@ -500,9 +471,9 @@ export default function ApprovalDetailPage({
       isApprover: true,
     };
 
-    setApproval({
-      ...approval,
-      comments: [...(approval.comments || []), newComment],
+    setAccountability({
+      ...accountability,
+      comments: [...(accountability.comments || []), newComment],
     });
 
     setCommentText("");
@@ -519,9 +490,9 @@ export default function ApprovalDetailPage({
       isApprover: true,
     };
 
-    setApproval({
-      ...approval,
-      items: approval.items.map((item) =>
+    setAccountability({
+      ...accountability,
+      items: accountability.items.map((item) =>
         item.id === itemId
           ? {
               ...item,
@@ -551,9 +522,9 @@ export default function ApprovalDetailPage({
       comment: forwardComment,
     };
 
-    setApproval({
-      ...approval,
-      history: [...(approval.history || []), newHistoryItem],
+    setAccountability({
+      ...accountability,
+      history: [...(accountability.history || []), newHistoryItem],
     });
 
     setShowForwardModal(false);
@@ -566,69 +537,19 @@ export default function ApprovalDetailPage({
     setShowDocumentModal(true);
   };
 
-  const allItemsProcessed = approval.items.every(
+  const allItemsProcessed = accountability.items.every(
     (item) => item.status !== ExpenseStatus.SUBMITTED,
   );
 
   const handleFinishReview = () => {
     // In a real app, you would submit the changes to the backend
-    // For now, just navigate back to the approvals list
-    router.push("/approvals");
+    // For now, just navigate back to the accountabilities list
+    router.push("/approvals/accountabilities");
   };
 
   const selectedItem = selectedItemId
-    ? approval.items.find((item) => item.id === selectedItemId)
+    ? accountability.items.find((item) => item.id === selectedItemId)
     : null;
-
-  const getBudgetInfo = (category: ExpenseCategory) => {
-    return mockBudgetData[category];
-  };
-
-  const handleRequestBudget = (itemId: string) => {
-    const item = approval.items.find((i) => i.id === itemId);
-    if (!item) return;
-
-    const budgetInfo = getBudgetInfo(item.category);
-    const requestData: BudgetRequestData = {
-      itemId: item.id,
-      category: item.category,
-      currentBudget: budgetInfo.allocated,
-      requestedAmount: item.finalAmount || item.amount,
-      reason: "",
-      requestedTo: "",
-    };
-
-    setBudgetRequestData(requestData);
-    setShowBudgetRequestModal(true);
-  };
-
-  const handleSubmitBudgetRequest = () => {
-    if (!budgetRequestData || !budgetRequestReason || !budgetRequestTo) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    // In a real app, this would send the request to the backend
-    alert(`Budget increase request sent to ${budgetRequestTo}`);
-
-    // Add to history
-    const newHistoryItem = {
-      action: "Budget Increase Requested",
-      user: "Current User", // In a real app, this would be the current user
-      timestamp: new Date().toISOString(),
-      comment: budgetRequestReason,
-    };
-
-    setApproval({
-      ...approval,
-      history: [...(approval.history || []), newHistoryItem],
-    });
-
-    setShowBudgetRequestModal(false);
-    setBudgetRequestData(null);
-    setBudgetRequestReason("");
-    setBudgetRequestTo("");
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -639,18 +560,18 @@ export default function ApprovalDetailPage({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push("/approvals")}
+              onClick={() => router.push("/approvals/accountabilities")}
               className="flex items-center gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
               Back
             </Button>
-            <h1 className="text-2xl font-bold">{approval.title}</h1>
+            <h1 className="text-2xl font-bold">{accountability.title}</h1>
             <Badge
               variant="secondary"
-              className={getStatusBadgeColor(approval.status)}
+              className={getStatusBadgeColor(accountability.status)}
             >
-              {approval.status.replace("_", " ")}
+              {accountability.status.replace("_", " ")}
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
@@ -680,6 +601,18 @@ export default function ApprovalDetailPage({
       {/* Main content */}
       <div className="flex-1 overflow-auto bg-gray-50">
         <div className="max-w-screen-2xl mx-auto p-6">
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4 text-blue-600" />
+              <span className="text-blue-800 font-medium">
+                Accountability for Advance Request:
+              </span>
+              <span className="text-blue-600">
+                {accountability.originalExpenseId}
+              </span>
+            </div>
+          </div>
+
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -712,7 +645,7 @@ export default function ApprovalDetailPage({
                   <CardHeader className="bg-muted/30">
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
-                      Request Details
+                      Accountability Details
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -723,7 +656,7 @@ export default function ApprovalDetailPage({
                           Request Number
                         </div>
                         <p className="font-medium text-lg">
-                          {approval.requestNumber}
+                          {accountability.requestNumber}
                         </p>
                       </div>
                       <div>
@@ -733,20 +666,20 @@ export default function ApprovalDetailPage({
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden">
-                            {approval.requestedBy_avatar && (
+                            {accountability.requestedBy_avatar && (
                               <img
-                                src={approval.requestedBy_avatar}
-                                alt={approval.requestedBy}
+                                src={accountability.requestedBy_avatar}
+                                alt={accountability.requestedBy}
                                 className="h-full w-full object-cover"
                               />
                             )}
                           </div>
                           <div>
                             <p className="font-medium">
-                              {approval.requestedBy}
+                              {accountability.requestedBy}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {approval.requestedBy_email}
+                              {accountability.requestedBy_email}
                             </p>
                           </div>
                         </div>
@@ -756,15 +689,17 @@ export default function ApprovalDetailPage({
                           <Building className="h-4 w-4" />
                           Department
                         </div>
-                        <p className="font-medium">{approval.department}</p>
+                        <p className="font-medium">
+                          {accountability.department}
+                        </p>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 text-muted-foreground mb-1">
                           <Calendar className="h-4 w-4" />
-                          Date Requested
+                          Date Submitted
                         </div>
                         <p className="font-medium">
-                          {formatDate(approval.requestedAt)}
+                          {formatDate(accountability.requestedAt)}
                         </p>
                       </div>
                       <div>
@@ -773,9 +708,10 @@ export default function ApprovalDetailPage({
                           Next Approver
                         </div>
                         <p className="font-medium">
-                          {approval.status === ExpenseStatus.SUBMITTED
+                          {accountability.status === ExpenseStatus.SUBMITTED
                             ? "Sarah Manager"
-                            : approval.status === ExpenseStatus.APPROVED_BY_HOD
+                            : accountability.status ===
+                                ExpenseStatus.APPROVED_BY_HOD
                               ? "Finance Team"
                               : "N/A"}
                         </p>
@@ -785,7 +721,7 @@ export default function ApprovalDetailPage({
                           <AlertCircle className="h-4 w-4" />
                           Type
                         </div>
-                        <p className="font-medium">{approval.type}</p>
+                        <p className="font-medium">{accountability.type}</p>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -793,105 +729,64 @@ export default function ApprovalDetailPage({
                           Total Amount
                         </div>
                         <p className="font-medium text-lg">
-                          {formatCurrency(approval.amount)}
+                          {formatCurrency(accountability.amount)}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Budget Summary */}
+                {/* Original Advance Info */}
                 <Card>
                   <CardHeader className="bg-muted/30">
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="h-5 w-5" />
-                      Budget Impact
+                      Original Advance
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="space-y-6">
-                      {approval.items.map((item) => {
-                        const budgetInfo = getBudgetInfo(item.category);
-                        const budgetStatusColor = getBudgetStatusColor(
-                          budgetInfo.allocated,
-                          budgetInfo.spent,
-                          item.amount,
-                        );
-                        const percentSpent = Math.round(
-                          (budgetInfo.spent / budgetInfo.allocated) * 100,
-                        );
-                        const percentWouldBeSpent = Math.round(
-                          ((budgetInfo.spent + item.amount) /
-                            budgetInfo.allocated) *
-                            100,
-                        );
-
-                        return (
-                          <div key={item.id} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <div className="font-medium">
-                                {getCategoryLabel(item.category)}
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={budgetStatusColor}
-                              >
-                                {formatCurrency(
-                                  budgetInfo.remaining - item.amount,
-                                  budgetInfo.currency,
-                                )}{" "}
-                                remaining after
-                              </Badge>
-                            </div>
-
-                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-600"
-                                style={{ width: `${percentSpent}%` }}
-                              ></div>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <div>
-                                <span className="font-medium">
-                                  {formatCurrency(
-                                    budgetInfo.spent,
-                                    budgetInfo.currency,
-                                  )}
-                                </span>
-                                <span className="text-muted-foreground">
-                                  {" "}
-                                  spent of{" "}
-                                </span>
-                                <span className="font-medium">
-                                  {formatCurrency(
-                                    budgetInfo.allocated,
-                                    budgetInfo.currency,
-                                  )}
-                                </span>
-                              </div>
-                              <div className="text-muted-foreground">
-                                {percentSpent}% used
-                                <span
-                                  className={`ml-2 ${percentWouldBeSpent > 100 ? "text-red-600" : "text-blue-600"}`}
-                                >
-                                  → {percentWouldBeSpent}% after approval
-                                </span>
-                                {percentWouldBeSpent > 100 && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 border-red-200 hover:bg-red-50 ml-2 h-6 text-xs"
-                                    onClick={() => handleRequestBudget(item.id)}
-                                  >
-                                    Request More
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Advance ID
+                        </div>
+                        <p className="font-medium">
+                          {accountability.originalExpenseId}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Advance Amount
+                        </div>
+                        <p className="font-medium text-lg">
+                          {formatCurrency(15000)}{" "}
+                          {/* Original advance amount */}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Accountability Amount
+                        </div>
+                        <p className="font-medium text-lg">
+                          {formatCurrency(accountability.amount)}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Difference
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-lg text-green-600">
+                            {formatCurrency(15000 - accountability.amount)}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-600"
+                          >
+                            To be refunded
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -903,7 +798,7 @@ export default function ApprovalDetailPage({
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Items List */}
                 <div className="lg:col-span-1 space-y-4">
-                  {approval.items.map((item) => (
+                  {accountability.items.map((item) => (
                     <Card
                       key={item.id}
                       className={`cursor-pointer transition-all ${selectedItemId === item.id ? "ring-2 ring-primary" : "hover:bg-muted/10"}`}
@@ -1006,97 +901,6 @@ export default function ApprovalDetailPage({
                                   </span>
                                 </div>
                               )}
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground mb-1">
-                              Budget Status
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                {(() => {
-                                  const budgetInfo = getBudgetInfo(
-                                    selectedItem.category,
-                                  );
-                                  const itemAmount =
-                                    selectedItem.finalAmount ||
-                                    selectedItem.amount;
-                                  const remaining =
-                                    budgetInfo.remaining - itemAmount;
-                                  let statusColor, statusText, icon;
-
-                                  if (remaining < 0) {
-                                    statusColor = "text-red-600";
-                                    statusText = "Over budget";
-                                    icon = (
-                                      <AlertCircle className="h-4 w-4 text-red-600" />
-                                    );
-                                  } else if (
-                                    remaining <
-                                    budgetInfo.allocated * 0.1
-                                  ) {
-                                    statusColor = "text-amber-600";
-                                    statusText = "Near limit";
-                                    icon = (
-                                      <AlertCircle className="h-4 w-4 text-amber-600" />
-                                    );
-                                  } else {
-                                    statusColor = "text-green-600";
-                                    statusText = "Within budget";
-                                    icon = (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    );
-                                  }
-
-                                  return (
-                                    <>
-                                      {icon}
-                                      <span
-                                        className={`font-medium ${statusColor}`}
-                                      >
-                                        {statusText}
-                                      </span>
-                                      <span className="text-muted-foreground">
-                                        •
-                                      </span>
-                                      <span>
-                                        {formatCurrency(
-                                          remaining,
-                                          budgetInfo.currency,
-                                        )}{" "}
-                                        remaining after approval
-                                      </span>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                              {(() => {
-                                const budgetInfo = getBudgetInfo(
-                                  selectedItem.category,
-                                );
-                                const itemAmount =
-                                  selectedItem.finalAmount ||
-                                  selectedItem.amount;
-                                const remaining =
-                                  budgetInfo.remaining - itemAmount;
-
-                                if (remaining < 0) {
-                                  return (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-red-600 border-red-200 hover:bg-red-50 mt-2"
-                                      onClick={() =>
-                                        handleRequestBudget(selectedItem.id)
-                                      }
-                                    >
-                                      <AlertCircle className="mr-2 h-4 w-4" />
-                                      Request Budget Increase
-                                    </Button>
-                                  );
-                                }
-                                return null;
-                              })()}
-                            </div>
                           </div>
                         </div>
 
@@ -1255,8 +1059,9 @@ export default function ApprovalDetailPage({
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4 mb-6">
-                    {approval.comments && approval.comments.length > 0 ? (
-                      approval.comments.map((comment) => (
+                    {accountability.comments &&
+                    accountability.comments.length > 0 ? (
+                      accountability.comments.map((comment) => (
                         <div
                           key={comment.id}
                           className={`bg-muted/20 rounded-lg p-4 ${comment.isApprover ? "border-l-4 border-blue-500" : ""}`}
@@ -1318,8 +1123,8 @@ export default function ApprovalDetailPage({
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="relative pl-6 border-l border-gray-200 dark:border-gray-700 space-y-6">
-                    {approval.history &&
-                      approval.history.map((event, index) => (
+                    {accountability.history &&
+                      accountability.history.map((event, index) => (
                         <div key={index} className="relative">
                           <div className="absolute -left-[25px] mt-1.5 h-4 w-4 rounded-full bg-primary"></div>
                           <div className="mb-1 text-sm font-medium">
@@ -1444,104 +1249,6 @@ export default function ApprovalDetailPage({
                   Document preview would be displayed here in a real
                   application.
                 </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Budget Request Modal */}
-      {showBudgetRequestModal && budgetRequestData && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setShowBudgetRequestModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold">Request Budget Increase</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setShowBudgetRequestModal(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Category</p>
-                <p className="font-medium">
-                  {budgetRequestData.category.replace("_", " ")}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Current Budget
-                  </p>
-                  <p className="font-medium">
-                    {formatCurrency(budgetRequestData.currentBudget)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Requested Amount
-                  </p>
-                  <p className="font-medium">
-                    {formatCurrency(budgetRequestData.requestedAmount)}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="budget-request-to">Request To</Label>
-                <select
-                  id="budget-request-to"
-                  className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
-                  value={budgetRequestTo}
-                  onChange={(e) => setBudgetRequestTo(e.target.value)}
-                  required
-                >
-                  <option value="">Select recipient</option>
-                  <option value="finance@sunculture.io">
-                    Finance Department
-                  </option>
-                  <option value="gm@sunculture.io">General Manager</option>
-                  <option value="cfo@sunculture.io">
-                    Chief Financial Officer
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="budget-request-reason">
-                  Reason for Request
-                </Label>
-                <textarea
-                  id="budget-request-reason"
-                  placeholder="Explain why additional budget is needed..."
-                  value={budgetRequestReason}
-                  onChange={(e) => setBudgetRequestReason(e.target.value)}
-                  className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBudgetRequestModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmitBudgetRequest}>
-                  Submit Request
-                </Button>
               </div>
             </div>
           </div>
