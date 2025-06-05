@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { formatCurrency, currencies, Currency } from "@/lib/currency";
-import { Budget, BudgetHistoryEntry, BudgetUploadType } from "@/Models/expense";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -32,235 +32,269 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pagination } from "@/components/ui/pagination";
-import { Download, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Trash2,
+  MessageSquare,
+  Filter,
+  Download,
+  Users,
+  Calendar,
+  DollarSign,
+  FileText,
+} from "lucide-react";
+
+// Types based on the backend payload
+interface BudgetRequest {
+  id: string;
+  approvalStatus: "PENDING" | "APPROVED" | "REJECTED" | "VOIDED";
+  approvalComments: string;
+  approvedBy: string;
+  dateApproved: string | null;
+  approver: number;
+  voidBudget: boolean;
+  budgetAmount: number;
+  approvedAmount: number;
+  budgetReason: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  expenseCategoriesId: number;
+  expenseCategoryName: string;
+  cashReleaseExpenseId: number;
+  regionId: number;
+  regionName: string;
+  suncultureDepartmentsId: number;
+  departmentName: string;
+  cashReleaseExpenseItemId: number;
+  requestDate: string;
+  currencyCode: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+}
 
 // Mock departments data
 const departments = [
-  { id: "1", name: "Engineering" },
-  { id: "2", name: "Finance" },
-  { id: "3", name: "Marketing" },
-  { id: "4", name: "Sales" },
-  { id: "5", name: "HR" },
-  { id: "6", name: "Operations" },
+  { id: 1, name: "Engineering" },
+  { id: 2, name: "Finance" },
+  { id: 3, name: "Marketing" },
+  { id: 4, name: "Sales" },
+  { id: 5, name: "HR" },
+  { id: 6, name: "Operations" },
+  { id: 7, name: "Product" },
+  { id: 8, name: "Customer Success" },
 ];
 
-// Mock business organizations data
-const businessOrganizations = [
-  { id: "1", name: "Product" },
-  { id: "2", name: "Growth" },
-  { id: "3", name: "Kenya" },
-  { id: "4", name: "Uganda" },
-  { id: "5", name: "Tanzania" },
-  { id: "6", name: "Nigeria" },
-];
-
-// Mock countries data
-const countries = [
-  { id: "1", name: "Kenya" },
-  { id: "2", name: "Uganda" },
-  { id: "3", name: "Tanzania" },
-  { id: "4", name: "Nigeria" },
-  { id: "5", name: "Ethiopia" },
+// Mock regions data
+const regions = [
+  { id: 1, name: "Kenya" },
+  { id: 2, name: "Uganda" },
+  { id: 3, name: "Tanzania" },
+  { id: 4, name: "Nigeria" },
+  { id: 5, name: "Ethiopia" },
 ];
 
 // Mock expense categories data
 const expenseCategories = [
-  { id: "1", name: "Travel" },
-  { id: "2", name: "Accommodation" },
-  { id: "3", name: "Meals" },
-  { id: "4", name: "Office Supplies" },
-  { id: "5", name: "Equipment" },
-  { id: "6", name: "Training" },
+  { id: 1, name: "Travel" },
+  { id: 2, name: "Accommodation" },
+  { id: 3, name: "Meals" },
+  { id: 4, name: "Office Supplies" },
+  { id: 5, name: "Equipment" },
+  { id: 6, name: "Training" },
+  { id: 7, name: "Marketing" },
+  { id: 8, name: "Software" },
 ];
 
-// Mock budget data
-const initialBudgets: Budget[] = [
+// Mock budget requests data
+const initialBudgetRequests: BudgetRequest[] = [
   {
-    id: "1",
-    department: "Engineering",
-    month: 1,
-    year: 2023,
-    amount: 50000,
-    spent: 32500,
-    remaining: 17500,
-    uploadedBy: "John Doe",
-    uploadedAt: new Date("2023-01-01"),
-    uploadType: BudgetUploadType.MANUAL,
-    isActive: true,
-    categoryId: "5",
-    categoryName: "Equipment",
-    startDate: "2023-01-01",
-    endDate: "2023-12-31",
-    businessOrgId: "1",
-    businessOrgName: "Product",
-    countryId: "1",
-    countryName: "Kenya",
+    id: "BR001",
+    approvalStatus: "PENDING",
+    approvalComments: "",
+    approvedBy: "",
+    dateApproved: null,
+    approver: 0,
+    voidBudget: false,
+    budgetAmount: 50000,
+    approvedAmount: 0,
+    budgetReason: "New project equipment and software licenses",
+    userId: 1,
+    userName: "John Doe",
+    userEmail: "john.doe@sunculture.com",
+    expenseCategoriesId: 5,
+    expenseCategoryName: "Equipment",
+    cashReleaseExpenseId: 101,
+    regionId: 1,
+    regionName: "Kenya",
+    suncultureDepartmentsId: 1,
+    departmentName: "Engineering",
+    cashReleaseExpenseItemId: 201,
+    requestDate: "2024-01-15",
     currencyCode: "KES",
+    priority: "HIGH",
   },
   {
-    id: "2",
-    department: "Marketing",
-    month: 1,
-    year: 2023,
-    amount: 30000,
-    spent: 27000,
-    remaining: 3000,
-    uploadedBy: "Jane Smith",
-    uploadedAt: new Date("2023-01-01"),
-    uploadType: BudgetUploadType.IMPORTED,
-    isActive: true,
-    categoryId: "1",
-    categoryName: "Travel",
-    startDate: "2023-01-01",
-    endDate: "2023-12-31",
-    businessOrgId: "2",
-    businessOrgName: "Growth",
-    countryId: "2",
-    countryName: "Uganda",
+    id: "BR002",
+    approvalStatus: "APPROVED",
+    approvalComments: "Approved for Q1 marketing campaign",
+    approvedBy: "Jane Smith",
+    dateApproved: "2024-01-10",
+    approver: 2,
+    voidBudget: false,
+    budgetAmount: 75000,
+    approvedAmount: 70000,
+    budgetReason: "Q1 digital marketing campaign budget",
+    userId: 3,
+    userName: "Mike Johnson",
+    userEmail: "mike.johnson@sunculture.com",
+    expenseCategoriesId: 7,
+    expenseCategoryName: "Marketing",
+    cashReleaseExpenseId: 102,
+    regionId: 2,
+    regionName: "Uganda",
+    suncultureDepartmentsId: 3,
+    departmentName: "Marketing",
+    cashReleaseExpenseItemId: 202,
+    requestDate: "2024-01-08",
     currencyCode: "UGX",
+    priority: "MEDIUM",
   },
   {
-    id: "3",
-    department: "Sales",
-    month: 2,
-    year: 2023,
-    amount: 25000,
-    spent: 10000,
-    remaining: 15000,
-    uploadedBy: "Mike Johnson",
-    uploadedAt: new Date("2023-02-01"),
-    uploadType: BudgetUploadType.MANUAL,
-    isActive: true,
-    categoryId: "3",
-    categoryName: "Meals",
-    startDate: "2023-02-01",
-    endDate: "2023-12-31",
-    businessOrgId: "3",
-    businessOrgName: "Kenya",
-    countryId: "3",
-    countryName: "Tanzania",
+    id: "BR003",
+    approvalStatus: "REJECTED",
+    approvalComments: "Budget exceeds quarterly allocation. Please revise.",
+    approvedBy: "Sarah Williams",
+    dateApproved: "2024-01-12",
+    approver: 4,
+    voidBudget: false,
+    budgetAmount: 120000,
+    approvedAmount: 0,
+    budgetReason: "Office renovation and new furniture",
+    userId: 5,
+    userName: "David Brown",
+    userEmail: "david.brown@sunculture.com",
+    expenseCategoriesId: 4,
+    expenseCategoryName: "Office Supplies",
+    cashReleaseExpenseId: 103,
+    regionId: 3,
+    regionName: "Tanzania",
+    suncultureDepartmentsId: 6,
+    departmentName: "Operations",
+    cashReleaseExpenseItemId: 203,
+    requestDate: "2024-01-05",
     currencyCode: "TZS",
+    priority: "LOW",
   },
   {
-    id: "4",
-    department: "HR",
-    month: 2,
-    year: 2023,
-    amount: 15000,
-    spent: 5000,
-    remaining: 10000,
-    uploadedBy: "Sarah Williams",
-    uploadedAt: new Date("2023-02-01"),
-    uploadType: BudgetUploadType.IMPORTED,
-    isActive: true,
-    categoryId: "6",
-    categoryName: "Training",
-    startDate: "2023-02-01",
-    endDate: "2023-12-31",
-    businessOrgId: "4",
-    businessOrgName: "Uganda",
-    countryId: "4",
-    countryName: "Nigeria",
+    id: "BR004",
+    approvalStatus: "PENDING",
+    approvalComments: "",
+    approvedBy: "",
+    dateApproved: null,
+    approver: 0,
+    voidBudget: false,
+    budgetAmount: 35000,
+    approvedAmount: 0,
+    budgetReason: "Team training and certification programs",
+    userId: 7,
+    userName: "Lisa Anderson",
+    userEmail: "lisa.anderson@sunculture.com",
+    expenseCategoriesId: 6,
+    expenseCategoryName: "Training",
+    cashReleaseExpenseId: 104,
+    regionId: 1,
+    regionName: "Kenya",
+    suncultureDepartmentsId: 5,
+    departmentName: "HR",
+    cashReleaseExpenseItemId: 204,
+    requestDate: "2024-01-18",
+    currencyCode: "KES",
+    priority: "MEDIUM",
+  },
+  {
+    id: "BR005",
+    approvalStatus: "VOIDED",
+    approvalComments: "Request voided due to project cancellation",
+    approvedBy: "Admin User",
+    dateApproved: "2024-01-14",
+    approver: 1,
+    voidBudget: true,
+    budgetAmount: 90000,
+    approvedAmount: 0,
+    budgetReason: "Software development tools and infrastructure",
+    userId: 9,
+    userName: "Tom Wilson",
+    userEmail: "tom.wilson@sunculture.com",
+    expenseCategoriesId: 8,
+    expenseCategoryName: "Software",
+    cashReleaseExpenseId: 105,
+    regionId: 4,
+    regionName: "Nigeria",
+    suncultureDepartmentsId: 1,
+    departmentName: "Engineering",
+    cashReleaseExpenseItemId: 205,
+    requestDate: "2024-01-03",
     currencyCode: "USD",
+    priority: "URGENT",
   },
   {
-    id: "5",
-    department: "Finance",
-    month: 3,
-    year: 2023,
-    amount: 20000,
-    spent: 18000,
-    remaining: 2000,
-    uploadedBy: "David Brown",
-    uploadedAt: new Date("2023-03-01"),
-    uploadType: BudgetUploadType.MANUAL,
-    isActive: false,
-    categoryId: "4",
-    categoryName: "Office Supplies",
-    startDate: "2023-03-01",
-    endDate: "2023-12-31",
-    businessOrgId: "5",
-    businessOrgName: "Tanzania",
-    countryId: "5",
-    countryName: "Ethiopia",
-    currencyCode: "EUR",
+    id: "BR006",
+    approvalStatus: "PENDING",
+    approvalComments: "",
+    approvedBy: "",
+    dateApproved: null,
+    approver: 0,
+    voidBudget: false,
+    budgetAmount: 25000,
+    approvedAmount: 0,
+    budgetReason: "Customer success tools and subscriptions",
+    userId: 11,
+    userName: "Emma Davis",
+    userEmail: "emma.davis@sunculture.com",
+    expenseCategoriesId: 8,
+    expenseCategoryName: "Software",
+    cashReleaseExpenseId: 106,
+    regionId: 1,
+    regionName: "Kenya",
+    suncultureDepartmentsId: 8,
+    departmentName: "Customer Success",
+    cashReleaseExpenseItemId: 206,
+    requestDate: "2024-01-20",
+    currencyCode: "KES",
+    priority: "MEDIUM",
   },
 ];
 
-// Mock budget history data
-const initialBudgetHistory: BudgetHistoryEntry[] = [
-  {
-    id: "1",
-    budgetId: "1",
-    action: "CREATED",
-    newValue: 50000,
-    editedBy: "John Doe",
-    editedAt: new Date("2023-01-01"),
-    comment: "Initial budget allocation",
-  },
-  {
-    id: "2",
-    budgetId: "1",
-    action: "UPDATED",
-    oldValue: 50000,
-    newValue: 60000,
-    editedBy: "Jane Smith",
-    editedAt: new Date("2023-01-15"),
-    comment: "Increased budget for new project",
-  },
-  {
-    id: "3",
-    budgetId: "2",
-    action: "CREATED",
-    newValue: 30000,
-    editedBy: "Jane Smith",
-    editedAt: new Date("2023-01-01"),
-    comment: "Initial budget allocation",
-  },
-  {
-    id: "4",
-    budgetId: "3",
-    action: "CREATED",
-    newValue: 25000,
-    editedBy: "Mike Johnson",
-    editedAt: new Date("2023-02-01"),
-    comment: "Initial budget allocation",
-  },
-  {
-    id: "5",
-    budgetId: "4",
-    action: "CREATED",
-    newValue: 15000,
-    editedBy: "Sarah Williams",
-    editedAt: new Date("2023-02-01"),
-    comment: "Initial budget allocation",
-  },
-];
+const statusColors = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  APPROVED: "bg-green-100 text-green-800",
+  REJECTED: "bg-red-100 text-red-800",
+  VOIDED: "bg-gray-100 text-gray-800",
+};
 
-const months = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
-];
+const priorityColors = {
+  LOW: "bg-blue-100 text-blue-800",
+  MEDIUM: "bg-orange-100 text-orange-800",
+  HIGH: "bg-red-100 text-red-800",
+  URGENT: "bg-purple-100 text-purple-800",
+};
 
-const years = [2022, 2023, 2024, 2025, 2026];
-
-export default function BudgetManagementPage() {
-  const [activeTab, setActiveTab] = useState("budgets");
-  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
-  const [budgetHistory, setBudgetHistory] =
-    useState<BudgetHistoryEntry[]>(initialBudgetHistory);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+export default function BudgetRequestsPage() {
+  const [budgetRequests, setBudgetRequests] = useState<BudgetRequest[]>(
+    initialBudgetRequests,
+  );
+  const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+  const [showActionDialog, setShowActionDialog] = useState(false);
+  const [actionType, setActionType] = useState<
+    "approve" | "reject" | "void" | null
+  >(null);
+  const [actionComments, setActionComments] = useState("");
+  const [approvedAmount, setApprovedAmount] = useState(0);
+  const [currentRequest, setCurrentRequest] = useState<BudgetRequest | null>(
+    null,
+  );
+  const [activeTab, setActiveTab] = useState("requests");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -268,709 +302,378 @@ export default function BudgetManagementPage() {
 
   // Filter state
   const [filters, setFilters] = useState({
-    department: "all_departments",
-    category: "all_categories",
-    month: "all_months",
-    year: "all_years",
-    uploadType: "all_types",
-    businessOrg: "all_business_orgs",
-    country: "all_countries",
+    status: "all",
+    department: "all",
+    region: "all",
+    category: "all",
+    priority: "all",
+    dateFrom: "",
+    dateTo: "",
+    searchTerm: "",
   });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    department: "",
-    categoryId: "",
-    month: 1,
-    year: new Date().getFullYear(),
-    amount: 0,
-    isActive: true,
-    uploadType: BudgetUploadType.MANUAL,
-    comment: "",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date(new Date().setMonth(new Date().getMonth() + 1))
-      .toISOString()
-      .split("T")[0],
-    businessOrgId: "",
-    countryId: "",
-    currencyCode: "KES",
-  });
+  // Filtered requests
+  const filteredRequests = budgetRequests.filter((request) => {
+    const matchesStatus =
+      filters.status === "all" || request.approvalStatus === filters.status;
+    const matchesDepartment =
+      filters.department === "all" ||
+      request.suncultureDepartmentsId.toString() === filters.department;
+    const matchesRegion =
+      filters.region === "all" ||
+      request.regionId.toString() === filters.region;
+    const matchesCategory =
+      filters.category === "all" ||
+      request.expenseCategoriesId.toString() === filters.category;
+    const matchesPriority =
+      filters.priority === "all" || request.priority === filters.priority;
+    const matchesDateFrom =
+      !filters.dateFrom ||
+      new Date(request.requestDate) >= new Date(filters.dateFrom);
+    const matchesDateTo =
+      !filters.dateTo ||
+      new Date(request.requestDate) <= new Date(filters.dateTo);
+    const matchesSearch =
+      !filters.searchTerm ||
+      request.budgetReason
+        .toLowerCase()
+        .includes(filters.searchTerm.toLowerCase()) ||
+      request.userName
+        .toLowerCase()
+        .includes(filters.searchTerm.toLowerCase()) ||
+      request.id.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-  // Import modal state
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
-
-  // Edit dialog state
-  const [showEditDialog, setShowEditDialog] = useState(false);
-
-  // Filtered budgets
-  const filteredBudgets = budgets.filter((budget) => {
     return (
-      (filters.department === "all_departments" ||
-        budget.department === filters.department) &&
-      (filters.category === "all_categories" ||
-        budget.categoryId === filters.category) &&
-      (filters.month === "all_months" ||
-        budget.month === parseInt(filters.month)) &&
-      (filters.year === "all_years" ||
-        budget.year === parseInt(filters.year)) &&
-      (filters.uploadType === "all_types" ||
-        budget.uploadType === filters.uploadType) &&
-      (filters.businessOrg === "all_business_orgs" ||
-        budget.businessOrgId === filters.businessOrg) &&
-      (filters.country === "all_countries" ||
-        budget.countryId === filters.country)
+      matchesStatus &&
+      matchesDepartment &&
+      matchesRegion &&
+      matchesCategory &&
+      matchesPriority &&
+      matchesDateFrom &&
+      matchesDateTo &&
+      matchesSearch
     );
   });
 
-  // Paginated budgets
-  const paginatedBudgets = filteredBudgets.slice(
+  // Paginated requests
+  const paginatedRequests = filteredRequests.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle checkbox changes
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, isActive: checked }));
-  };
-
   // Handle filter changes
   const handleFilterChange = (name: string, value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const departmentName =
-      departments.find((d) => d.id === formData.department)?.name || "";
-    const categoryName =
-      expenseCategories.find((c) => c.id === formData.categoryId)?.name || "";
-    const businessOrgName =
-      businessOrganizations.find((b) => b.id === formData.businessOrgId)
-        ?.name || "";
-    const countryName =
-      countries.find((c) => c.id === formData.countryId)?.name || "";
-
-    if (editingId) {
-      // Update existing budget
-      const oldBudget = budgets.find((b) => b.id === editingId);
-      const oldAmount = oldBudget?.amount || 0;
-
-      setBudgets(
-        budgets.map((budget) =>
-          budget.id === editingId
-            ? {
-                ...budget,
-                department: departmentName,
-                categoryId: formData.categoryId,
-                categoryName,
-                month: formData.month,
-                year: formData.year,
-                amount: formData.amount,
-                remaining: formData.amount - (budget.spent || 0),
-                isActive: formData.isActive,
-                updatedBy: "Current User", // In a real app, get from auth context
-                updatedAt: new Date(),
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                businessOrgId: formData.businessOrgId,
-                businessOrgName,
-                countryId: formData.countryId,
-                countryName,
-                currencyCode: formData.currencyCode,
-              }
-            : budget,
-        ),
-      );
-
-      // Add history entry
-      const newHistoryEntry: BudgetHistoryEntry = {
-        id: `history-${Date.now()}`,
-        budgetId: editingId,
-        action: "UPDATED",
-        oldValue: oldAmount,
-        newValue: formData.amount,
-        editedBy: "Current User", // In a real app, get from auth context
-        editedAt: new Date(),
-        comment: formData.comment,
-      };
-
-      setBudgetHistory([newHistoryEntry, ...budgetHistory]);
-      setShowEditDialog(false);
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRequests(paginatedRequests.map((req) => req.id));
     } else {
-      // Add new budget
-      const newBudget: Budget = {
-        id: `budget-${Date.now()}`,
-        department: departmentName,
-        categoryId: formData.categoryId,
-        categoryName,
-        month: formData.month,
-        year: formData.year,
-        amount: formData.amount,
-        spent: 0,
-        remaining: formData.amount,
-        uploadedBy: "Current User", // In a real app, get from auth context
-        uploadedAt: new Date(),
-        uploadType: formData.uploadType,
-        isActive: formData.isActive,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        businessOrgId: formData.businessOrgId,
-        businessOrgName,
-        countryId: formData.countryId,
-        countryName,
-        currencyCode: formData.currencyCode,
-      };
-
-      setBudgets([...budgets, newBudget]);
-
-      // Add history entry
-      const newHistoryEntry: BudgetHistoryEntry = {
-        id: `history-${Date.now()}`,
-        budgetId: newBudget.id,
-        action: "CREATED",
-        newValue: formData.amount,
-        editedBy: "Current User", // In a real app, get from auth context
-        editedAt: new Date(),
-        comment: formData.comment,
-      };
-
-      setBudgetHistory([newHistoryEntry, ...budgetHistory]);
-    }
-
-    resetForm();
-  };
-
-  // Handle edit button click
-  const handleEdit = (budget: Budget) => {
-    const department =
-      departments.find((d) => d.name === budget.department)?.id || "";
-
-    setFormData({
-      department: department,
-      categoryId: budget.categoryId || "",
-      month: budget.month,
-      year: budget.year,
-      amount: budget.amount,
-      isActive: budget.isActive,
-      uploadType: budget.uploadType,
-      comment: "",
-      startDate: budget.startDate || new Date().toISOString().split("T")[0],
-      endDate:
-        budget.endDate ||
-        new Date(new Date().setMonth(new Date().getMonth() + 1))
-          .toISOString()
-          .split("T")[0],
-      businessOrgId: budget.businessOrgId || "",
-      countryId: budget.countryId || "",
-      currencyCode: budget.currencyCode || "KES",
-    });
-
-    setEditingId(budget.id);
-    setShowEditDialog(true);
-  };
-
-  // Handle delete button click
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this budget?")) {
-      setBudgets(budgets.filter((budget) => budget.id !== id));
-
-      // Add history entry for deletion
-      const deletedBudget = budgets.find((b) => b.id === id);
-      if (deletedBudget) {
-        const newHistoryEntry: BudgetHistoryEntry = {
-          id: `history-${Date.now()}`,
-          budgetId: id,
-          action: "DELETED",
-          oldValue: deletedBudget.amount,
-          editedBy: "Current User", // In a real app, get from auth context
-          editedAt: new Date(),
-          comment: "Budget deleted",
-        };
-
-        setBudgetHistory([newHistoryEntry, ...budgetHistory]);
-      }
+      setSelectedRequests([]);
     }
   };
 
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      department: "",
-      categoryId: "",
-      month: 1,
-      year: new Date().getFullYear(),
-      amount: 0,
-      isActive: true,
-      uploadType: BudgetUploadType.MANUAL,
-      comment: "",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1))
-        .toISOString()
-        .split("T")[0],
-      businessOrgId: "",
-      countryId: "",
-      currencyCode: "KES",
-    });
-    setEditingId(null);
-    setShowForm(false);
-  };
-
-  // Handle import button click
-  const handleImport = () => {
-    setShowImportModal(true);
-  };
-
-  // Handle file selection for import
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setImportFile(e.target.files[0]);
+  // Handle individual checkbox
+  const handleSelectRequest = (requestId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRequests((prev) => [...prev, requestId]);
+    } else {
+      setSelectedRequests((prev) => prev.filter((id) => id !== requestId));
     }
   };
 
-  // Handle import form submission
-  const handleImportSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle single action
+  const handleSingleAction = (
+    request: BudgetRequest,
+    action: "approve" | "reject" | "void",
+  ) => {
+    setCurrentRequest(request);
+    setActionType(action);
+    setApprovedAmount(request.budgetAmount);
+    setActionComments("");
+    setShowActionDialog(true);
+  };
 
-    // In a real app, this would process the file and import data
-    // For now, we'll just show a success message and close the modal
-    alert("File imported successfully!");
-    setShowImportModal(false);
-    setImportFile(null);
+  // Handle bulk action
+  const handleBulkAction = (action: "approve" | "reject" | "void") => {
+    if (selectedRequests.length === 0) {
+      alert("Please select at least one request");
+      return;
+    }
+    setCurrentRequest(null);
+    setActionType(action);
+    setActionComments("");
+    setShowActionDialog(true);
+  };
 
-    // Add some mock imported budgets
-    const newImportedBudgets: Budget[] = [
-      {
-        id: `budget-${Date.now()}-1`,
-        department: "Operations",
-        month: 4,
-        year: 2023,
-        amount: 35000,
-        spent: 0,
-        remaining: 35000,
-        uploadedBy: "Current User",
-        uploadedAt: new Date(),
-        uploadType: BudgetUploadType.IMPORTED,
-        isActive: true,
-        categoryId: "2",
-        categoryName: "Accommodation",
-        startDate: "2023-04-01",
-        endDate: "2023-12-31",
-        businessOrgId: "3",
-        businessOrgName: "Kenya",
-        countryId: "3",
-        countryName: "Tanzania",
-        currencyCode: "TZS",
-      },
-      {
-        id: `budget-${Date.now()}-2`,
-        department: "Finance",
-        month: 4,
-        year: 2023,
-        amount: 22000,
-        spent: 0,
-        remaining: 22000,
-        uploadedBy: "Current User",
-        uploadedAt: new Date(),
-        uploadType: BudgetUploadType.IMPORTED,
-        isActive: true,
-        categoryId: "4",
-        categoryName: "Office Supplies",
-        startDate: "2023-04-01",
-        endDate: "2023-12-31",
-        businessOrgId: "4",
-        businessOrgName: "Uganda",
-        countryId: "4",
-        countryName: "Nigeria",
-        currencyCode: "USD",
-      },
-    ];
+  // Process action
+  const processAction = () => {
+    const now = new Date().toISOString().split("T")[0];
+    const requestsToUpdate = currentRequest
+      ? [currentRequest.id]
+      : selectedRequests;
 
-    setBudgets([...budgets, ...newImportedBudgets]);
-
-    // Add history entries for imported budgets
-    const newHistoryEntries: BudgetHistoryEntry[] = newImportedBudgets.map(
-      (budget) => ({
-        id: `history-${Date.now()}-${budget.id}`,
-        budgetId: budget.id,
-        action: "CREATED",
-        newValue: budget.amount,
-        editedBy: "Current User",
-        editedAt: new Date(),
-        comment: "Imported from file",
+    setBudgetRequests((prev) =>
+      prev.map((request) => {
+        if (requestsToUpdate.includes(request.id)) {
+          return {
+            ...request,
+            approvalStatus:
+              actionType === "approve"
+                ? "APPROVED"
+                : actionType === "reject"
+                  ? "REJECTED"
+                  : "VOIDED",
+            approvalComments: actionComments,
+            approvedBy: "Current User", // In real app, get from auth context
+            dateApproved: now,
+            approver: 1, // In real app, get from auth context
+            approvedAmount:
+              actionType === "approve"
+                ? currentRequest
+                  ? approvedAmount
+                  : request.budgetAmount
+                : 0,
+            voidBudget: actionType === "void",
+          };
+        }
+        return request;
       }),
     );
 
-    setBudgetHistory([...newHistoryEntries, ...budgetHistory]);
+    setShowActionDialog(false);
+    setSelectedRequests([]);
+    setCurrentRequest(null);
+    setActionType(null);
+    setActionComments("");
+    setApprovedAmount(0);
   };
 
-  // Handle export button click
-  const handleExport = (format: string) => {
-    // In a real app, this would generate and download a file
-    alert(`Exporting budgets as ${format}...`);
-  };
-
-  // Format date for display
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  // Get statistics
+  const stats = {
+    total: budgetRequests.length,
+    pending: budgetRequests.filter((r) => r.approvalStatus === "PENDING")
+      .length,
+    approved: budgetRequests.filter((r) => r.approvalStatus === "APPROVED")
+      .length,
+    rejected: budgetRequests.filter((r) => r.approvalStatus === "REJECTED")
+      .length,
+    voided: budgetRequests.filter((r) => r.approvalStatus === "VOIDED").length,
+    totalAmount: budgetRequests.reduce((sum, r) => sum + r.budgetAmount, 0),
+    approvedAmount: budgetRequests.reduce(
+      (sum, r) => sum + r.approvedAmount,
+      0,
+    ),
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Budget Management</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Budget Requests</h1>
+          <p className="text-gray-600 mt-1">
+            Manage and approve budget requests from your team
+          </p>
+        </div>
         <div className="flex space-x-2">
           <Button
-            onClick={handleImport}
-            variant="outline"
-            className="flex items-center gap-2"
+            onClick={() => handleBulkAction("approve")}
+            disabled={selectedRequests.length === 0}
+            className="bg-green-600 hover:bg-green-700"
           >
-            <Upload className="h-4 w-4" />
-            Import
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Bulk Approve ({selectedRequests.length})
           </Button>
-          <div className="relative">
-            <Button
-              onClick={() => handleExport("excel")}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export as Excel
-            </Button>
-          </div>
-          {!showForm && (
-            <Button onClick={() => setShowForm(true)} className="bg-primary">
-              <Plus className="mr-2 h-4 w-4" /> Add Budget
-            </Button>
-          )}
+          <Button
+            onClick={() => handleBulkAction("reject")}
+            disabled={selectedRequests.length === 0}
+            variant="destructive"
+          >
+            <XCircle className="mr-2 h-4 w-4" />
+            Bulk Reject ({selectedRequests.length})
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
         </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Requests
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-yellow-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {stats.pending}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Approved</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.approved}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {stats.rejected}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Trash2 className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Voided</p>
+                <p className="text-2xl font-bold text-gray-600">
+                  {stats.voided}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Requested
+                </p>
+                <p className="text-lg font-bold text-blue-600">
+                  {formatCurrency(stats.totalAmount, "KES")}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Approved
+                </p>
+                <p className="text-lg font-bold text-green-600">
+                  {formatCurrency(stats.approvedAmount, "KES")}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="budgets">Budgets</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="requests">Budget Requests</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="budgets" className="space-y-6">
-          {showForm && !editingId && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Add Budget</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="department" className="text-red-500">
-                        Department *
-                      </Label>
-                      <Select
-                        value={formData.department}
-                        onValueChange={(value) =>
-                          handleSelectChange("department", value)
-                        }
-                      >
-                        <SelectTrigger id="department">
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.id}>
-                              {dept.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="categoryId" className="text-red-500">
-                        Expense Category *
-                      </Label>
-                      <Select
-                        value={formData.categoryId}
-                        onValueChange={(value) =>
-                          handleSelectChange("categoryId", value)
-                        }
-                      >
-                        <SelectTrigger id="categoryId">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {expenseCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="businessOrgId" className="text-red-500">
-                        Business Organization *
-                      </Label>
-                      <Select
-                        value={formData.businessOrgId}
-                        onValueChange={(value) =>
-                          handleSelectChange("businessOrgId", value)
-                        }
-                      >
-                        <SelectTrigger id="businessOrgId">
-                          <SelectValue placeholder="Select business organization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {businessOrganizations.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="countryId" className="text-red-500">
-                        Country *
-                      </Label>
-                      <Select
-                        value={formData.countryId}
-                        onValueChange={(value) =>
-                          handleSelectChange("countryId", value)
-                        }
-                      >
-                        <SelectTrigger id="countryId">
-                          <SelectValue placeholder="Select country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries.map((country) => (
-                            <SelectItem key={country.id} value={country.id}>
-                              {country.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate" className="text-red-500">
-                        Start Date *
-                      </Label>
-                      <Input
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate" className="text-red-500">
-                        End Date *
-                      </Label>
-                      <Input
-                        id="endDate"
-                        name="endDate"
-                        type="date"
-                        value={formData.endDate}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="month" className="text-red-500">
-                        Month *
-                      </Label>
-                      <Select
-                        value={formData.month.toString()}
-                        onValueChange={(value) =>
-                          handleSelectChange("month", value)
-                        }
-                      >
-                        <SelectTrigger id="month">
-                          <SelectValue placeholder="Select month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {months.map((month) => (
-                            <SelectItem
-                              key={month.value}
-                              value={month.value.toString()}
-                            >
-                              {month.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="year" className="text-red-500">
-                        Year *
-                      </Label>
-                      <Select
-                        value={formData.year.toString()}
-                        onValueChange={(value) =>
-                          handleSelectChange("year", value)
-                        }
-                      >
-                        <SelectTrigger id="year">
-                          <SelectValue placeholder="Select year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {years.map((year) => (
-                            <SelectItem key={year} value={year.toString()}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="amount" className="text-red-500">
-                        Amount *
-                      </Label>
-                      <Input
-                        id="amount"
-                        name="amount"
-                        type="number"
-                        value={formData.amount}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="currencyCode" className="text-red-500">
-                        Currency *
-                      </Label>
-                      <Select
-                        value={formData.currencyCode}
-                        onValueChange={(value) =>
-                          handleSelectChange("currencyCode", value)
-                        }
-                      >
-                        <SelectTrigger id="currencyCode">
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {currencies.map((currency) => (
-                            <SelectItem
-                              key={currency.code}
-                              value={currency.code}
-                            >
-                              {currency.name} ({currency.symbol})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="uploadType" className="text-red-500">
-                        Upload Type *
-                      </Label>
-                      <Select
-                        value={formData.uploadType}
-                        onValueChange={(value) =>
-                          handleSelectChange("uploadType", value)
-                        }
-                      >
-                        <SelectTrigger id="uploadType">
-                          <SelectValue placeholder="Select upload type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={BudgetUploadType.MANUAL}>
-                            Manual
-                          </SelectItem>
-                          <SelectItem value={BudgetUploadType.IMPORTED}>
-                            Imported
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="comment">Comment</Label>
-                    <Input
-                      id="comment"
-                      name="comment"
-                      value={formData.comment}
-                      onChange={handleChange}
-                      placeholder="Add a comment about this budget change"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isActive"
-                      checked={formData.isActive}
-                      onCheckedChange={(checked) =>
-                        handleCheckboxChange(checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="isActive">Active</Label>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button type="submit" className="bg-primary">
-                      {editingId ? "Update" : "Add"} Budget
-                    </Button>
-                    <Button type="button" variant="outline" onClick={resetForm}>
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
+        <TabsContent value="requests" className="space-y-6">
+          {/* Filters */}
+          <Card className="bg-white">
             <CardHeader>
-              <CardTitle>Filter Budgets</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filters
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                <div>
-                  <Label htmlFor="filter-department">Department</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="search">Search</Label>
+                  <Input
+                    id="search"
+                    placeholder="Search requests..."
+                    value={filters.searchTerm}
+                    onChange={(e) =>
+                      handleFilterChange("searchTerm", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) =>
+                      handleFilterChange("status", value)
+                    }
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="VOIDED">Voided</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
                   <Select
                     value={filters.department}
                     onValueChange={(value) =>
                       handleFilterChange("department", value)
                     }
                   >
-                    <SelectTrigger id="filter-department">
+                    <SelectTrigger id="department">
                       <SelectValue placeholder="All Departments" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all_departments">
-                        All Departments
-                      </SelectItem>
+                      <SelectItem value="all">All Departments</SelectItem>
                       {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.name}>
+                        <SelectItem key={dept.id} value={dept.id.toString()}>
                           {dept.name}
                         </SelectItem>
                       ))}
@@ -978,23 +681,46 @@ export default function BudgetManagementPage() {
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="filter-category">Category</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="region">Region</Label>
+                  <Select
+                    value={filters.region}
+                    onValueChange={(value) =>
+                      handleFilterChange("region", value)
+                    }
+                  >
+                    <SelectTrigger id="region">
+                      <SelectValue placeholder="All Regions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {regions.map((region) => (
+                        <SelectItem
+                          key={region.id}
+                          value={region.id.toString()}
+                        >
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
                   <Select
                     value={filters.category}
                     onValueChange={(value) =>
                       handleFilterChange("category", value)
                     }
                   >
-                    <SelectTrigger id="filter-category">
+                    <SelectTrigger id="category">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all_categories">
-                        All Categories
-                      </SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {expenseCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
                         </SelectItem>
                       ))}
@@ -1002,218 +728,207 @@ export default function BudgetManagementPage() {
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="filter-month">Month</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
                   <Select
-                    value={filters.month}
+                    value={filters.priority}
                     onValueChange={(value) =>
-                      handleFilterChange("month", value)
+                      handleFilterChange("priority", value)
                     }
                   >
-                    <SelectTrigger id="filter-month">
-                      <SelectValue placeholder="All Months" />
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="All Priorities" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all_months">All Months</SelectItem>
-                      {months.map((month) => (
-                        <SelectItem
-                          key={month.value}
-                          value={month.value.toString()}
-                        >
-                          {month.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="all">All Priorities</SelectItem>
+                      <SelectItem value="LOW">Low</SelectItem>
+                      <SelectItem value="MEDIUM">Medium</SelectItem>
+                      <SelectItem value="HIGH">High</SelectItem>
+                      <SelectItem value="URGENT">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="filter-year">Year</Label>
-                  <Select
-                    value={filters.year}
-                    onValueChange={(value) => handleFilterChange("year", value)}
-                  >
-                    <SelectTrigger id="filter-year">
-                      <SelectValue placeholder="All Years" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_years">All Years</SelectItem>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="dateFrom">From Date</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) =>
+                      handleFilterChange("dateFrom", e.target.value)
+                    }
+                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="filter-uploadType">Upload Type</Label>
-                  <Select
-                    value={filters.uploadType}
-                    onValueChange={(value) =>
-                      handleFilterChange("uploadType", value)
+                <div className="space-y-2">
+                  <Label htmlFor="dateTo">To Date</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) =>
+                      handleFilterChange("dateTo", e.target.value)
                     }
-                  >
-                    <SelectTrigger id="filter-uploadType">
-                      <SelectValue placeholder="All Types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_types">All Types</SelectItem>
-                      <SelectItem value={BudgetUploadType.MANUAL}>
-                        Manual
-                      </SelectItem>
-                      <SelectItem value={BudgetUploadType.IMPORTED}>
-                        Imported
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="filter-businessOrg">Business Org</Label>
-                  <Select
-                    value={filters.businessOrg}
-                    onValueChange={(value) =>
-                      handleFilterChange("businessOrg", value)
-                    }
-                  >
-                    <SelectTrigger id="filter-businessOrg">
-                      <SelectValue placeholder="All Business Orgs" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_business_orgs">
-                        All Business Orgs
-                      </SelectItem>
-                      {businessOrganizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>
-                          {org.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="filter-country">Country</Label>
-                  <Select
-                    value={filters.country}
-                    onValueChange={(value) =>
-                      handleFilterChange("country", value)
-                    }
-                  >
-                    <SelectTrigger id="filter-country">
-                      <SelectValue placeholder="All Countries" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_countries">
-                        All Countries
-                      </SelectItem>
-                      {countries.map((country) => (
-                        <SelectItem key={country.id} value={country.id}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Budget Requests Table */}
+          <Card className="bg-white">
             <CardHeader>
-              <CardTitle>Budgets</CardTitle>
+              <CardTitle>Budget Requests ({filteredRequests.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          selectedRequests.length ===
+                            paginatedRequests.length &&
+                          paginatedRequests.length > 0
+                        }
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead>Request ID</TableHead>
+                    <TableHead>Requester</TableHead>
                     <TableHead>Department</TableHead>
+                    <TableHead>Region</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Business Org</TableHead>
-                    <TableHead>Country</TableHead>
-                    <TableHead>Date Range</TableHead>
-                    <TableHead>Month/Year</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Spent</TableHead>
-                    <TableHead>Remaining</TableHead>
-                    <TableHead>Upload Type</TableHead>
+                    <TableHead>Approved Amount</TableHead>
+                    <TableHead>Priority</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Uploaded By</TableHead>
-                    <TableHead>Uploaded At</TableHead>
+                    <TableHead>Request Date</TableHead>
+                    <TableHead>Reason</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedBudgets.length > 0 ? (
-                    paginatedBudgets.map((budget) => (
-                      <TableRow key={budget.id}>
-                        <TableCell>{budget.department}</TableCell>
-                        <TableCell>{budget.categoryName}</TableCell>
-                        <TableCell>{budget.businessOrgName || "N/A"}</TableCell>
-                        <TableCell>{budget.countryName || "N/A"}</TableCell>
+                  {paginatedRequests.length > 0 ? (
+                    paginatedRequests.map((request) => (
+                      <TableRow key={request.id}>
                         <TableCell>
-                          {budget.startDate && budget.endDate
-                            ? `${new Date(budget.startDate).toLocaleDateString()} - ${new Date(budget.endDate).toLocaleDateString()}`
-                            : "N/A"}
+                          <Checkbox
+                            checked={selectedRequests.includes(request.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectRequest(
+                                request.id,
+                                checked as boolean,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {request.id}
                         </TableCell>
                         <TableCell>
-                          {months.find((m) => m.value === budget.month)?.label}{" "}
-                          {budget.year}
+                          <div>
+                            <p className="font-medium">{request.userName}</p>
+                            <p className="text-sm text-gray-500">
+                              {request.userEmail}
+                            </p>
+                          </div>
                         </TableCell>
-                        <TableCell>
-                          {formatCurrency(budget.amount, budget.currencyCode)}
-                        </TableCell>
-                        <TableCell>
-                          {formatCurrency(budget.spent, budget.currencyCode)}
-                        </TableCell>
+                        <TableCell>{request.departmentName}</TableCell>
+                        <TableCell>{request.regionName}</TableCell>
+                        <TableCell>{request.expenseCategoryName}</TableCell>
                         <TableCell>
                           {formatCurrency(
-                            budget.remaining,
-                            budget.currencyCode,
+                            request.budgetAmount,
+                            request.currencyCode,
                           )}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${budget.uploadType === BudgetUploadType.MANUAL ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"}`}
-                          >
-                            {budget.uploadType === BudgetUploadType.MANUAL
-                              ? "Manual"
-                              : "Imported"}
-                          </span>
+                          {request.approvedAmount > 0
+                            ? formatCurrency(
+                                request.approvedAmount,
+                                request.currencyCode,
+                              )
+                            : "—"}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${budget.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                          >
-                            {budget.isActive ? "Active" : "Inactive"}
-                          </span>
+                          <Badge className={priorityColors[request.priority]}>
+                            {request.priority}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{budget.uploadedBy}</TableCell>
-                        <TableCell>{formatDate(budget.uploadedAt)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={statusColors[request.approvalStatus]}
+                          >
+                            {request.approvalStatus}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(request.requestDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell
+                          className="max-w-xs truncate"
+                          title={request.budgetReason}
+                        >
+                          {request.budgetReason}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(budget)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(budget.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+                          <div className="flex justify-end space-x-1">
+                            {request.approvalStatus === "PENDING" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSingleAction(request, "approve")
+                                  }
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() =>
+                                    handleSingleAction(request, "reject")
+                                  }
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleSingleAction(request, "void")
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {request.approvalComments && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title={request.approvalComments}
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={14} className="text-center py-4">
-                        No budgets found matching the current filters.
+                      <TableCell colSpan={13} className="text-center py-8">
+                        <div className="flex flex-col items-center space-y-2">
+                          <FileText className="h-12 w-12 text-gray-400" />
+                          <p className="text-gray-500">
+                            No budget requests found matching the current
+                            filters.
+                          </p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}
@@ -1221,7 +936,7 @@ export default function BudgetManagementPage() {
               </Table>
 
               <Pagination
-                totalItems={filteredBudgets.length}
+                totalItems={filteredRequests.length}
                 pageSize={pageSize}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
@@ -1232,409 +947,170 @@ export default function BudgetManagementPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6">
-          <Card>
+        <TabsContent value="analytics" className="space-y-6">
+          <Card className="bg-white">
             <CardHeader>
-              <CardTitle>Budget History</CardTitle>
+              <CardTitle>Budget Request Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Business Org</TableHead>
-                    <TableHead>Country</TableHead>
-                    <TableHead>Month/Year</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Old Value</TableHead>
-                    <TableHead>New Value</TableHead>
-                    <TableHead>Edited By</TableHead>
-                    <TableHead>Edited At</TableHead>
-                    <TableHead>Comment</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {budgetHistory.map((history) => {
-                    const relatedBudget = budgets.find(
-                      (b) => b.id === history.budgetId,
-                    ) || {
-                      department: "Unknown",
-                      categoryName: "Unknown",
-                      month: 1,
-                      year: 2023,
-                      currencyCode: "KES",
-                    };
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Requests by Status
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span>Pending</span>
+                      <span className="font-medium">{stats.pending}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Approved</span>
+                      <span className="font-medium">{stats.approved}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Rejected</span>
+                      <span className="font-medium">{stats.rejected}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Voided</span>
+                      <span className="font-medium">{stats.voided}</span>
+                    </div>
+                  </div>
+                </div>
 
-                    return (
-                      <TableRow key={history.id}>
-                        <TableCell>{relatedBudget.department}</TableCell>
-                        <TableCell>{relatedBudget.categoryName}</TableCell>
-                        <TableCell>
-                          {relatedBudget.businessOrgName || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {relatedBudget.countryName || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {
-                            months.find((m) => m.value === relatedBudget.month)
-                              ?.label
-                          }{" "}
-                          {relatedBudget.year}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${history.action === "CREATED" ? "bg-green-100 text-green-800" : history.action === "UPDATED" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}
-                          >
-                            {history.action}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {history.oldValue !== undefined
-                            ? formatCurrency(
-                                history.oldValue,
-                                relatedBudget.currencyCode,
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          {history.newValue !== undefined
-                            ? formatCurrency(
-                                history.newValue,
-                                relatedBudget.currencyCode,
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell>{history.editedBy}</TableCell>
-                        <TableCell>{formatDate(history.editedAt)}</TableCell>
-                        <TableCell>{history.comment || "—"}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Budget Summary</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span>Total Requested</span>
+                      <span className="font-medium">
+                        {formatCurrency(stats.totalAmount, "KES")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Total Approved</span>
+                      <span className="font-medium">
+                        {formatCurrency(stats.approvedAmount, "KES")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Approval Rate</span>
+                      <span className="font-medium">
+                        {stats.total > 0
+                          ? Math.round((stats.approved / stats.total) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Import Budgets</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleImportSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="importFile" className="text-red-500">
-                    Select File *
-                  </Label>
-                  <Input
-                    id="importFile"
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleFileChange}
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Accepted formats: .xlsx, .xls, .csv
-                  </p>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    type="submit"
-                    className="bg-primary"
-                    disabled={!importFile}
-                  >
-                    Import
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowImportModal(false);
-                      setImportFile(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Edit Budget Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[800px]">
+      {/* Action Dialog */}
+      <Dialog open={showActionDialog} onOpenChange={setShowActionDialog}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Budget</DialogTitle>
+            <DialogTitle>
+              {actionType === "approve"
+                ? "Approve"
+                : actionType === "reject"
+                  ? "Reject"
+                  : "Void"}{" "}
+              Budget Request
+              {currentRequest ? "" : "s"}
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="department" className="text-red-500">
-                  Department *
-                </Label>
-                <Select
-                  value={formData.department}
-                  onValueChange={(value) =>
-                    handleSelectChange("department", value)
-                  }
-                >
-                  <SelectTrigger id="department">
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="categoryId" className="text-red-500">
-                  Expense Category *
-                </Label>
-                <Select
-                  value={formData.categoryId}
-                  onValueChange={(value) =>
-                    handleSelectChange("categoryId", value)
-                  }
-                >
-                  <SelectTrigger id="categoryId">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {expenseCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <div className="space-y-4">
+            {currentRequest ? (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="font-medium">
+                  {currentRequest.id} - {currentRequest.userName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {currentRequest.budgetReason}
+                </p>
+                <p className="text-sm font-medium mt-2">
+                  Amount:{" "}
+                  {formatCurrency(
+                    currentRequest.budgetAmount,
+                    currentRequest.currencyCode,
+                  )}
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="businessOrgId" className="text-red-500">
-                  Business Organization *
-                </Label>
-                <Select
-                  value={formData.businessOrgId}
-                  onValueChange={(value) =>
-                    handleSelectChange("businessOrgId", value)
-                  }
-                >
-                  <SelectTrigger id="businessOrgId">
-                    <SelectValue placeholder="Select business organization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {businessOrganizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id}>
-                        {org.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            ) : (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="font-medium">Bulk Action</p>
+                <p className="text-sm text-gray-600">
+                  You are about to {actionType} {selectedRequests.length} budget
+                  request(s).
+                </p>
               </div>
+            )}
 
+            {actionType === "approve" && currentRequest && (
               <div className="space-y-2">
-                <Label htmlFor="countryId" className="text-red-500">
-                  Country *
-                </Label>
-                <Select
-                  value={formData.countryId}
-                  onValueChange={(value) =>
-                    handleSelectChange("countryId", value)
-                  }
-                >
-                  <SelectTrigger id="countryId">
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.id} value={country.id}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="startDate" className="text-red-500">
-                  Start Date *
-                </Label>
+                <Label htmlFor="approvedAmount">Approved Amount</Label>
                 <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endDate" className="text-red-500">
-                  End Date *
-                </Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="month" className="text-red-500">
-                  Month *
-                </Label>
-                <Select
-                  value={formData.month.toString()}
-                  onValueChange={(value) => handleSelectChange("month", value)}
-                >
-                  <SelectTrigger id="month">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem
-                        key={month.value}
-                        value={month.value.toString()}
-                      >
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="year" className="text-red-500">
-                  Year *
-                </Label>
-                <Select
-                  value={formData.year.toString()}
-                  onValueChange={(value) => handleSelectChange("year", value)}
-                >
-                  <SelectTrigger id="year">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-red-500">
-                  Amount *
-                </Label>
-                <Input
-                  id="amount"
-                  name="amount"
+                  id="approvedAmount"
                   type="number"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
+                  value={approvedAmount}
+                  onChange={(e) => setApprovedAmount(Number(e.target.value))}
+                  max={currentRequest.budgetAmount}
                 />
+                <p className="text-xs text-gray-500">
+                  Maximum:{" "}
+                  {formatCurrency(
+                    currentRequest.budgetAmount,
+                    currentRequest.currencyCode,
+                  )}
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="currencyCode" className="text-red-500">
-                  Currency *
-                </Label>
-                <Select
-                  value={formData.currencyCode}
-                  onValueChange={(value) =>
-                    handleSelectChange("currencyCode", value)
-                  }
-                >
-                  <SelectTrigger id="currencyCode">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencies.map((currency) => (
-                      <SelectItem key={currency.code} value={currency.code}>
-                        {currency.name} ({currency.symbol})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="uploadType" className="text-red-500">
-                  Upload Type *
-                </Label>
-                <Select
-                  value={formData.uploadType}
-                  onValueChange={(value) =>
-                    handleSelectChange("uploadType", value)
-                  }
-                >
-                  <SelectTrigger id="uploadType">
-                    <SelectValue placeholder="Select upload type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={BudgetUploadType.MANUAL}>
-                      Manual
-                    </SelectItem>
-                    <SelectItem value={BudgetUploadType.IMPORTED}>
-                      Imported
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="comment">Comment</Label>
+              <Label htmlFor="comments">
+                Comments {actionType === "reject" ? "(Required)" : "(Optional)"}
+              </Label>
               <Input
-                id="comment"
-                name="comment"
-                value={formData.comment}
-                onChange={handleChange}
-                placeholder="Add a comment about this budget change"
+                id="comments"
+                value={actionComments}
+                onChange={(e) => setActionComments(e.target.value)}
+                placeholder={`Add ${actionType} comments...`}
+                required={actionType === "reject"}
               />
             </div>
+          </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={(checked) =>
-                  handleCheckboxChange(checked as boolean)
-                }
-              />
-              <Label htmlFor="isActive">Active</Label>
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary">
-                Update Budget
-              </Button>
-            </DialogFooter>
-          </form>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowActionDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={processAction}
+              disabled={actionType === "reject" && !actionComments.trim()}
+              className={
+                actionType === "approve"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : actionType === "reject"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-gray-600 hover:bg-gray-700"
+              }
+            >
+              {actionType === "approve"
+                ? "Approve"
+                : actionType === "reject"
+                  ? "Reject"
+                  : "Void"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
